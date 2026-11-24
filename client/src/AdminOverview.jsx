@@ -15,7 +15,7 @@ import { StudentManagementView } from "./components/admin/StudentManagementView"
 import { RoleManagementView } from "./components/admin/RoleManagementView";
 import { MockTestBuilderView } from "./components/admin/MockTestBuilderView";
 import { TopicwiseTestView } from "./components/admin/TopicwiseTestView";
-import { CurrentAffairsView } from "./components/admin/CurrentAffairsView";
+import { AdminCaStudio } from "./components/admin/AdminCaStudio";
 import { AttemptReportsView } from "./components/admin/AttemptReportsView";
 import { AuditLogsView } from "./components/admin/AuditLogsView";
 import { AdminPaymentsView } from "./components/admin/AdminPaymentsView";
@@ -648,10 +648,7 @@ function AdminOverview({
       )}
 
       {section === "Current affairs" && (
-        <CurrentAffairsView
-          onToast={onToast}
-          onConfirmModal={onConfirmModal}
-        />
+        <AdminCaStudio onToast={onToast} />
       )}
 
       {section === "Reports" && <AttemptReportsView

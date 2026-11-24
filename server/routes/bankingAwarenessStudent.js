@@ -8,7 +8,18 @@ import {
   getCachedPublished,
   setCachedPublished,
 } from "../services/bankingFreshness.js";
-import { buildPaginationMeta } from "./currentAffairsStudent.js";
+function buildPaginationMeta({ page, limit, total }) {
+  const safeTotal = Math.max(0, Number(total) || 0);
+  const totalPages = Math.max(1, Math.ceil(safeTotal / limit));
+  return {
+    page,
+    limit,
+    total: safeTotal,
+    totalPages,
+    hasNextPage: page < totalPages,
+    hasPreviousPage: page > 1,
+  };
+}
 
 export const bankingAwarenessStudentRouter = Router();
 bankingAwarenessStudentRouter.use(requireAuth);

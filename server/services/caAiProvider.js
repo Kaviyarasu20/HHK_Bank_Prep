@@ -5,7 +5,7 @@
  * - Implements request timeout, bounded retry for 429/5xx, and token usage tracking.
  */
 
-const DEFAULT_TIMEOUT_MS = 25_000;
+const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_MAX_RETRIES = 2;
 
 export function getAiConfig(env = process.env) {
@@ -15,7 +15,7 @@ export function getAiConfig(env = process.env) {
   const model = String(
     env.CA_AI_MODEL ??
       (provider === "gemini"
-        ? "gemini-2.0-flash"
+        ? "gemini-2.5-flash"
         : provider === "openai"
           ? "gpt-4o-mini"
           : ""),
@@ -60,7 +60,8 @@ async function callWithTimeout(fetchFn, url, options, timeoutMs) {
 }
 
 async function invokeGemini({ model, apiKey, systemPrompt, userPrompt, timeoutMs, fetchFn }) {
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  const cleanModel = String(model).replace(/^models\//i, "");
+const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cleanModel)}:generateContent`;
   const res = await callWithTimeout(
     fetchFn,
     endpoint,
@@ -82,7 +83,9 @@ async function invokeGemini({ model, apiKey, systemPrompt, userPrompt, timeoutMs
     timeoutMs,
   );
   if (!res.ok) {
-    const err = new Error(`AI provider returned HTTP ${res.status}.`);
+    const errBody = await res.text().catch(() => "");
+    console.error(`[Gemini Error] model=${cleanModel} status=${res.status} body=${errBody}`);
+    const err = new Error(`AI provider returned HTTP ${res.status} (model: ${cleanModel}).`);
     err.status = res.status;
     throw err;
   }
@@ -168,39 +171,41 @@ export async function executeAiCompletion({
       { status: 503 },
     );
   }
-
+  const models = cfg.model.split(",").map((m) => m.trim()).filter(Boolean);
   let lastErr;
-  for (let attempt = 0; attempt <= cfg.maxRetries; attempt += 1) {
-    try {
-      const out =
-        cfg.provider === "gemini"
-          ? await invokeGemini({
-              model: cfg.model,
-              apiKey: cfg._apiKey,
-              systemPrompt,
-              userPrompt,
-              timeoutMs: cfg.timeoutMs,
-              fetchFn,
-            })
-          : await invokeOpenAi({
-              model: cfg.model,
-              apiKey: cfg._apiKey,
-              systemPrompt,
-              userPrompt,
-              timeoutMs: cfg.timeoutMs,
-              fetchFn,
-            });
-      return {
-        provider: cfg.provider,
-        model: cfg.model,
-        rawText: out.rawText,
-        usage: out.usage,
-      };
-    } catch (err) {
-      lastErr = err;
-      const retryable = err?.status === 429 || (err?.status >= 500 && err?.status < 600);
-      if (!retryable || attempt >= cfg.maxRetries) break;
-      await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+  for (const activeModel of models) {
+    for (let attempt = 0; attempt <= cfg.maxRetries; attempt += 1) {
+      try {
+        const out =
+          cfg.provider === "gemini"
+            ? await invokeGemini({
+                model: activeModel,
+                apiKey: cfg._apiKey,
+                systemPrompt,
+                userPrompt,
+                timeoutMs: cfg.timeoutMs,
+                fetchFn,
+              })
+            : await invokeOpenAi({
+                model: activeModel,
+                apiKey: cfg._apiKey,
+                systemPrompt,
+                userPrompt,
+                timeoutMs: cfg.timeoutMs,
+                fetchFn,
+              });
+        return {
+          provider: cfg.provider,
+          model: activeModel,
+          rawText: out.rawText,
+          usage: out.usage,
+        };
+      } catch (err) {
+        lastErr = err;
+        const retryable = err?.status === 429 || (err?.status >= 500 && err?.status < 600);
+        if (!retryable || attempt >= cfg.maxRetries) break;
+        await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+      }
     }
   }
   throw lastErr;

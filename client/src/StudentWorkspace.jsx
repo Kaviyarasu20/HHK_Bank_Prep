@@ -11,8 +11,7 @@ import { StudentPerformanceDashboard } from "./components/student/StudentPerform
 import { MockTestListView } from "./components/student/MockTestListView";
 import { PracticeSetupView } from "./components/student/PracticeSetupView";
 import { BookmarksView } from "./components/student/BookmarksView";
-import { StudentCurrentAffairs } from "./components/student/StudentCurrentAffairs";
-import { studentCaApi } from "./api/currentAffairs";
+import { StudentCaPractice } from "./components/student/StudentCaPractice";
 import { LeaderboardView } from "./components/student/LeaderboardView";
 import { AchievementsView } from "./components/student/AchievementsView";
 import { StudentProfileView } from "./components/student/StudentProfileView";
@@ -220,62 +219,7 @@ function StudentWorkspace({
     else task = Promise.resolve();
     task.catch((e) => setError(e.message)).finally(() => setBusy(false));
   }, [section, period]);
-  useEffect(() => {
-    if (section !== "Current affairs" || affairCategories.length > 0) return;
-    let cancelled = false;
-    studentCaApi
-      .getCategories()
-      .then((c) => {
-        if (!cancelled) setAffairCategories(c.categories ?? []);
-      })
-      .catch((e) => {
-        if (!cancelled) setAffairError(e.message);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [section, affairCategories.length]);
-
-  useEffect(() => {
-    if (section !== "Current affairs") return;
-    const controller = new AbortController();
-    const seq = ++affairReqSeqRef.current;
-    const timer = setTimeout(() => {
-      setAffairLoading(true);
-      setAffairError("");
-      studentCaApi
-        .listArticles(
-          {
-            categoryId: affairCategory,
-            month: affairMonth,
-            q: affairSearch,
-            priority: affairPriority,
-            relevance: affairRelevance,
-            exam: affairExam,
-            bookmarked: affairBookmarkedOnly ? "true" : "",
-            page: affairPage,
-            limit: 20,
-          },
-          { signal: controller.signal },
-        )
-        .then((a) => {
-          if (seq !== affairReqSeqRef.current) return;
-          setAffairs(a.items ?? []);
-          setAffairPagination(a.pagination ?? null);
-        })
-        .catch((e) => {
-          if (e?.name === "AbortError" || seq !== affairReqSeqRef.current) return;
-          setAffairError(e.message || "Failed to load current affairs.");
-        })
-        .finally(() => {
-          if (seq === affairReqSeqRef.current) setAffairLoading(false);
-        });
-    }, affairSearch ? 220 : 0);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [section, affairCategory, affairMonth, affairSearch, affairPriority, affairRelevance, affairExam, affairBookmarkedOnly, affairPage, affairReloadTick]);
+  
   useEffect(() => {
     if (section !== "Achievements") return;
     const refreshIfVisible = () => {
@@ -685,21 +629,7 @@ function StudentWorkspace({
     }
   }
 
-  async function updateAffairState(id, patch) {
-    try {
-      const updated = await studentCaApi.updateState(id, patch);
-      setAffairs((prev) => {
-        const next = prev.map((a) =>
-          a.id === id
-            ? { ...a, is_read: updated.is_read, is_bookmarked: updated.is_bookmarked }
-            : a
-        );
-        return affairBookmarkedOnly ? next.filter((a) => a.is_bookmarked) : next;
-      });
-    } catch (e) {
-      setError(e.message);
-    }
-  }
+  
   async function answerAffair(key) {
     if (!affairQuiz) return;
     try {
@@ -892,38 +822,7 @@ function StudentWorkspace({
     startBookmarkedQuestion={startBookmarkedQuestion}
     toggleBookmark={toggleBookmark}
   />}
-      {section === "Current affairs" && <StudentCurrentAffairs
-    affairCategory={affairCategory}
-    setAffairCategory={setAffairCategory}
-    affairMonth={affairMonth}
-    setAffairMonth={setAffairMonth}
-    affairSearch={affairSearch}
-    setAffairSearch={setAffairSearch}
-    affairPriority={affairPriority}
-    setAffairPriority={setAffairPriority}
-    affairRelevance={affairRelevance}
-    setAffairRelevance={setAffairRelevance}
-    affairExam={affairExam}
-    setAffairExam={setAffairExam}
-    affairBookmarkedOnly={affairBookmarkedOnly}
-    setAffairBookmarkedOnly={setAffairBookmarkedOnly}
-    affairPage={affairPage}
-    setAffairPage={setAffairPage}
-    affairPagination={affairPagination}
-    affairLoading={affairLoading}
-    affairError={affairError}
-    onRetryAffairs={() => setAffairReloadTick((t) => t + 1)}
-    affairCategories={affairCategories}
-    affairs={affairs}
-    affairQuiz={affairQuiz}
-    setAffairQuiz={setAffairQuiz}
-    answerAffair={answerAffair}
-    showAffairQuestion={showAffairQuestion}
-    openAffair={openAffair}
-    openCombinedAffairQuiz={openCombinedAffairQuiz}
-    onUpdateAffairState={updateAffairState}
-    onStartGaTest={handleSelectMockTest}
-    />}
+      {section === "Current affairs" && <StudentCaPractice onToast={onToast} />}
       {section === "Leaderboard" && <LeaderboardView
     period={period}
     setPeriod={setPeriod}

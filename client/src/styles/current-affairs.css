@@ -493,3 +493,204 @@
   color: #991b1b;
   font-size: 13.5px;
 }
+
+
+/* =========================================================================
+ * Aspirant Current Affairs Auto MCQ Generator Styles
+ * ========================================================================= */
+.ca-automcq-wrap {
+  width: 100%;
+}
+
+.ca-automcq-config,
+.ca-automcq-runner {
+  padding: 20px;
+}
+
+.ca-automcq-mode-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ca-automcq-notes-box textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.ca-automcq-submit-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.ca-automcq-runner-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.ca-automcq-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-weight: 700;
+  font-size: 13.5px;
+}
+
+.ca-automcq-timer.is-urgent {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.ca-automcq-scorecard {
+  margin: 14px 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.ca-automcq-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.ca-automcq-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.ca-automcq-pill {
+  min-width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ca-automcq-pill.is-current {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.2);
+}
+
+.ca-automcq-pill.is-answered {
+  background: #e0e7ff;
+  border-color: #6366f1;
+  color: #312e81;
+}
+
+.ca-automcq-pill.is-correct {
+  background: #dcfce7;
+  border-color: #16a34a;
+  color: #166534;
+}
+
+.ca-automcq-pill.is-wrong {
+  background: #fee2e2;
+  border-color: #dc2626;
+  color: #991b1b;
+}
+
+.ca-automcq-stem {
+  font-size: 15.5px;
+  font-weight: 650;
+  line-height: 1.65;
+  color: #0f172a;
+  white-space: pre-wrap;
+  margin-bottom: 12px;
+}
+
+.ca-automcq-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ca-automcq-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  justify-content: flex-start;
+}
+
+.ca-automcq-opt-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 12.5px;
+}
+
+.ca-automcq-opt.is-opt-selected {
+  border-color: #4f46e5;
+  background: #eef2ff;
+  color: #1e1b4b;
+}
+
+.ca-automcq-opt.is-opt-correct {
+  border-color: #16a34a;
+  background: #dcfce7;
+  color: #14532d;
+}
+
+.ca-automcq-opt.is-opt-wrong {
+  border-color: #dc2626;
+  background: #fee2e2;
+  color: #7f1d1d;
+}
+
+
+/* Confirmation Modal for CBT Practice Submission */
+.ca-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.ca-modal-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 22px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+  border: 1px solid #e2e8f0;
+}
