@@ -1,0 +1,252 @@
+// Place at: server/question-engine/generators/quant/mixtureAlligation/mixtureMath.js
+
+function bigAbs(x) {
+  return x < 0n ? -x : x;
+}
+
+export function bigGcd(a, b) {
+  a = bigAbs(a);
+  b = bigAbs(b);
+  while (b !== 0n) [a, b] = [b, a % b];
+  return a === 0n ? 1n : a;
+}
+
+/**
+ * Exact BigInt Rational arithmetic for zero floating-point drift in mixture calculations.
+ */
+export class Rational {
+  constructor(num, den = 1n) {
+    const n = typeof num === "bigint" ? num : BigInt(Math.round(Number(num)));
+    const d = typeof den === "bigint" ? den : BigInt(Math.round(Number(den)));
+    if (d === 0n) throw new Error("Rational denominator cannot be zero.");
+    const sign = d < 0n ? -1n : 1n;
+    const g = bigGcd(n, d);
+    this.num = (n * sign) / g;
+    this.den = (d * sign) / g;
+  }
+
+  static from(v) {
+    return v instanceof Rational ? v : new Rational(v, 1n);
+  }
+
+  add(o) {
+    const r = Rational.from(o);
+    return new Rational(this.num * r.den + r.num * this.den, this.den * r.den);
+  }
+
+  sub(o) {
+    const r = Rational.from(o);
+    return new Rational(this.num * r.den - r.num * this.den, this.den * r.den);
+  }
+
+  mul(o) {
+    const r = Rational.from(o);
+    return new Rational(this.num * r.num, this.den * r.den);
+  }
+
+  div(o) {
+    const r = Rational.from(o);
+    if (r.num === 0n) throw new Error("Division by zero in Rational.");
+    return new Rational(this.num * r.den, this.den * r.num);
+  }
+
+  abs() {
+    return new Rational(bigAbs(this.num), this.den);
+  }
+
+  cmp(o) {
+    const r = Rational.from(o);
+    const diff = this.num * r.den - r.num * this.den;
+    return diff < 0n ? -1 : diff > 0n ? 1 : 0;
+  }
+
+  equals(o) {
+    return this.cmp(o) === 0;
+  }
+
+  isPositive() {
+    return this.num > 0n;
+  }
+
+  isNegative() {
+    return this.num < 0n;
+  }
+
+  isZero() {
+    return this.num === 0n;
+  }
+
+  toNumber() {
+    return Number(this.num) / Number(this.den);
+  }
+
+  toFractionString() {
+    return this.den === 1n ? `${this.num}` : `${this.num}/${this.den}`;
+  }
+
+  /**
+   * Formats cleanly: exact integer ("48"), clean terminating decimal ("32.4"),
+   * or mixed fraction ("14 2/7").
+   */
+  toExamString() {
+    if (this.den === 1n) return `${this.num}`;
+    if (1000n % this.den === 0n) {
+      const scaled = (this.num * 1000n) / this.den;
+      const val = Number(scaled) / 1000;
+      return String(val);
+    }
+    const whole = this.num / this.den;
+    const rem = bigAbs(this.num % this.den);
+    if (whole === 0n) return `${this.num}/${this.den}`;
+    return `${whole} ${rem}/${this.den}`;
+  }
+}
+
+export const R = (n, d = 1) => new Rational(BigInt(n), BigInt(d));
+export const ZERO = R(0);
+export const ONE = R(1);
+export const HUNDRED = R(100);
+
+/**
+ * Deterministic seeded PRNG (Mulberry32) for reproducible batch generation.
+ */
+export function createRng(seed = Date.now()) {
+  let a = Number(seed) >>> 0;
+  const next = () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  return {
+    seed: Number(seed) >>> 0,
+    random: next,
+    randInt(min, max) {
+      return Math.floor(next() * (max - min + 1)) + min;
+    },
+    pick(arr) {
+      return arr[Math.floor(next() * arr.length)];
+    },
+    shuffle(arr) {
+      const c = [...arr];
+      for (let i = c.length - 1; i > 0; i--) {
+        const j = Math.floor(next() * (i + 1));
+        [c[i], c[j]] = [c[j], c[i]];
+      }
+      return c;
+    },
+  };
+}
+
+/**
+ * Formats a Rational value with consistent prefix/suffix units.
+ */
+export function formatWithUnit(rationalVal, { prefix = "", unit = "" } = {}) {
+  const valStr = rationalVal.toExamString();
+  const suffix = unit ? (unit === "%" ? "%" : ` ${unit}`) : "";
+  return `${prefix}${valStr}${suffix}`;
+}
+
+/**
+ * Builds exactly 4 unique MCQ options (A, B, C, D) using plausible banking-mistake
+ * distractors first, then clean rational offsets if needed.
+ */
+export function buildMixtureOptions(
+  correctRational,
+  plausible = [],
+  { prefix = "", unit = "", rng, ratioFormat = null, maxVal = null } = {}
+) {
+  const keys = ["A", "B", "C", "D"];
+
+  if (ratioFormat) {
+    const correctStr = ratioFormat.correct;
+    const distractors = [];
+    const seen = new Set([correctStr]);
+
+    for (const d of ratioFormat.distractors) {
+      if (distractors.length < 3 && d && !seen.has(d)) {
+        seen.add(d);
+        distractors.push(d);
+      }
+    }
+
+    let step = 1;
+    while (distractors.length < 3) {
+      const cand = `${ratioFormat.p + step} : ${ratioFormat.q}`;
+      if (!seen.has(cand)) {
+        seen.add(cand);
+        distractors.push(cand);
+      }
+      step++;
+    }
+
+    const ordered = rng.shuffle([correctStr, ...distractors]);
+    const idx = ordered.indexOf(correctStr);
+    return {
+      optionsArray: ordered,
+      optionsObj: { A: ordered[0], B: ordered[1], C: ordered[2], D: ordered[3] },
+      correctOptionIndex: idx,
+      correctKey: keys[idx],
+      correctValue: correctStr,
+    };
+  }
+
+  const correctStr = formatWithUnit(correctRational, { prefix, unit });
+  const distractors = [];
+  const seenR = [correctRational];
+  const seenS = new Set([correctStr]);
+
+  const tryAdd = (cand) => {
+    if (distractors.length >= 3) return;
+    if (!(cand instanceof Rational) || !cand.isPositive() || cand.den > 100n) return;
+    if (maxVal !== null && cand.cmp(R(maxVal)) >= 0) return;
+    if (seenR.some((x) => x.equals(cand))) return;
+    const s = formatWithUnit(cand, { prefix, unit });
+    if (seenS.has(s)) return;
+    seenR.push(cand);
+    seenS.add(s);
+    distractors.push(s);
+  };
+
+  for (const c of plausible) {
+    try {
+      tryAdd(c);
+    } catch {
+      // ignore invalid distractor candidate
+    }
+  }
+
+  const baseNum = correctRational.toNumber();
+  const stepUnit =
+    baseNum >= 200 ? 15n : baseNum >= 60 ? 5n : baseNum >= 20 ? 2n : 1n;
+
+  const offsets = [
+    new Rational(stepUnit, 1n),
+    new Rational(-stepUnit, 1n),
+    new Rational(stepUnit * 2n, 1n),
+    new Rational(-stepUnit * 2n, 1n),
+    new Rational(stepUnit * 3n, 1n),
+    new Rational(stepUnit * 4n, 1n),
+  ];
+
+  for (const off of rng.shuffle(offsets)) {
+    tryAdd(correctRational.add(off));
+  }
+
+  let k = 1n;
+  while (distractors.length < 3 && k < 50n) {
+    tryAdd(correctRational.add(new Rational(k * stepUnit, 1n)));
+    k++;
+  }
+
+  const ordered = rng.shuffle([correctStr, ...distractors.slice(0, 3)]);
+  const idx = ordered.indexOf(correctStr);
+  return {
+    optionsArray: ordered,
+    optionsObj: { A: ordered[0], B: ordered[1], C: ordered[2], D: ordered[3] },
+    correctOptionIndex: idx,
+    correctKey: keys[idx],
+    correctValue: correctStr,
+  };
+}

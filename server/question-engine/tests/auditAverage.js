@@ -1,0 +1,53 @@
+// Place at: server/question-engine/tests/auditAverage.js
+import { generateAverageBatch } from "../generators/quant/average/index.js";
+import { validateEngineQuestion } from "../core/validator.js";
+
+function runAverageAudit() {
+  let totalTested = 0;
+  let errors = 0;
+
+  // 15 Prelims Types
+  for (let typeId = 1; typeId <= 15; typeId++) {
+    const batch = generateAverageBatch({
+      exam: "IBPS_PO_PRELIMS",
+      level: "PRELIMS",
+      allowedTypes: [typeId],
+      difficulty: "MEDIUM",
+      count: 100,
+    });
+    batch.forEach((q, idx) => {
+      totalTested++;
+      const check = validateEngineQuestion(q);
+      if (!check.valid) {
+        console.error(`Audit failed [PRELIMS Type ${typeId}] #${idx}:`, check.reason, q);
+        errors++;
+      }
+    });
+  }
+
+  // 15 Mains Types
+  for (let typeId = 1; typeId <= 15; typeId++) {
+    const batch = generateAverageBatch({
+      exam: "IBPS_PO_MAINS",
+      level: "MAINS",
+      allowedTypes: [typeId],
+      difficulty: "HARD",
+      count: 100,
+    });
+    batch.forEach((q, idx) => {
+      totalTested++;
+      const check = validateEngineQuestion(q);
+      if (!check.valid) {
+        console.error(`Audit failed [MAINS Type ${typeId}] #${idx}:`, check.reason, q);
+        errors++;
+      }
+    });
+  }
+
+  console.log(
+    `Audited ${totalTested} Average questions (15 Prelims + 15 Mains types). Errors: ${errors}`
+  );
+  if (errors > 0) process.exit(1);
+}
+
+runAverageAudit();

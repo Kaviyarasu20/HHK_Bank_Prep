@@ -1,0 +1,93 @@
+{
+  "exportedAt": "2026-11-17T19:14:58.298Z",
+  "examsCount": 2,
+  "questionsCount": 0,
+  "exams": [
+    {
+      "id": "sbi-po-2025",
+      "name": "SBI PO",
+      "code": "SBI-PO",
+      "category": "Public Sector Banks",
+      "description": "State Bank of India Probationary Officers Recruitment Examination",
+      "pattern_cycle": "2025",
+      "pattern_source_url": "https://sbi.co.in/web/careers",
+      "status": "published",
+      "stages": [
+        {
+          "id": "sbi-po-prelims",
+          "name": "Prelims",
+          "duration_seconds": 3600,
+          "sort_order": 0,
+          "sections": [
+            {
+              "id": "sec-sbi-reas",
+              "name": "Reasoning Ability",
+              "question_count": 35,
+              "duration_seconds": 1200,
+              "marks_per_correct": 1,
+              "negative_marks": 0.25,
+              "sort_order": 0
+            },
+            {
+              "id": "sec-sbi-quant",
+              "name": "Quantitative Aptitude",
+              "question_count": 35,
+              "duration_seconds": 1200,
+              "marks_per_correct": 1,
+              "negative_marks": 0.25,
+              "sort_order": 1
+            },
+            {
+              "id": "sec-sbi-eng",
+              "name": "English Language",
+              "question_count": 30,
+              "duration_seconds": 1200,
+              "marks_per_correct": 1,
+              "negative_marks": 0.25,
+              "sort_order": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ibps-po-2025",
+      "name": "IBPS PO",
+      "code": "IBPS-PO",
+      "category": "IBPS Common Recruitment Process",
+      "description": "IBPS CRP PO/MT Examination for Participating Public Sector Banks",
+      "pattern_cycle": "2025",
+      "pattern_source_url": "https://www.ibps.in",
+      "status": "published",
+      "stages": [
+        {
+          "id": "ibps-po-prelims",
+          "name": "Prelims",
+          "duration_seconds": 3600,
+          "sort_order": 0,
+          "sections": [
+            {
+              "id": "sec-ibps-reas",
+              "name": "Reasoning Ability",
+              "question_count": 35,
+              "duration_seconds": 1200,
+              "marks_per_correct": 1,
+              "negative_marks": 0.25,
+              "sort_order": 0
+            },
+            {
+              "id": "sec-ibps-quant",
+              "name": "Quantitative Aptitude",
+              "question_count": 35,
+              "duration_seconds": 1200,
+              "marks_per_correct": 1,
+              "negative_marks": 0.25,
+              "sort_order": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "questions": []
+}

@@ -1,0 +1,17 @@
+node_modules/
+dist/
+client/dist/
+.env
+.env.*
+!.env.example
+
+*.log
+*.tsbuildinfo
+coverage/
+.DS_Store
+.vscode/
+
+# Temporary directories
+Frontend/
+Backend/
+*.zip

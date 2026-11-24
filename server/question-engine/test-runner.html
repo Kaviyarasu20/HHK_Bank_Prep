@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bank Exam Question Engine — Browser Test Bench</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --card: #ffffff;
+      --primary: #1a56db;
+      --success: #057a55;
+      --danger: #e02424;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 24px;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .header-card, .question-card, .audit-banner {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    h1 {
+      margin: 0 0 16px 0;
+      font-size: 20px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.92; }
+    button.secondary {
+      background: #111827;
+    }
+    .meta-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #e1effe;
+      color: #1e429f;
+    }
+    .badge.EASY { background: #def7ec; color: #03543f; }
+    .badge.MEDIUM { background: #fef3c7; color: #92400e; }
+    .badge.HARD { background: #fde8e8; color: #9b1c1c; }
+    .q-text {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 12px 0;
+      font-family: "Cambria Math", Georgia, serif;
+    }
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .opt-btn {
+      background: #f9fafb;
+      color: var(--text);
+      border: 1px solid var(--border);
+      text-align: left;
+      padding: 8px 12px;
+      font-weight: 500;
+    }
+    .opt-btn.correct {
+      background: #def7ec;
+      border-color: var(--success);
+      color: #03543f;
+      font-weight: 700;
+    }
+    .opt-btn.wrong {
+      background: #fde8e8;
+      border-color: var(--danger);
+      color: #9b1c1c;
+    }
+    details {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    pre {
+      background: #111827;
+      color: #e5e7eb;
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-card">
+      <h1>Bank Exam Simplification Engine — Browser Test Bench</h1>
+      <div class="controls">
+        <div>
+          <label>Exam Blueprint</label>
+          <select id="examSelect">
+            <option value="IBPS_CLERK_PRELIMS">IBPS Clerk Prelims</option>
+            <option value="RRB_CLERK_PRELIMS">RRB Clerk Prelims</option>
+            <option value="IBPS_PO_MAINS">IBPS PO Mains</option>
+          </select>
+        </div>
+        <div>
+          <label>Simplification Type</label>
+          <select id="typeSelect">
+            <option value="ALL">All Types (1–9)</option>
+            <option value="1">Type 1: VBODMAS</option>
+            <option value="2">Type 2: Percentage to Fraction</option>
+            <option value="3">Type 3: Mixed Fractions</option>
+            <option value="4">Type 4: Squares, Cubes & Roots</option>
+            <option value="5">Type 5: Surds & Indices</option>
+            <option value="6">Type 6: Decimals</option>
+            <option value="7">Type 7: Algebraic Identities</option>
+            <option value="8">Type 8: Ladder Fractions</option>
+            <option value="9">Type 9: Unit Digit & Digital Sum</option>
+          </select>
+        </div>
+        <div>
+          <label>Difficulty</label>
+          <select id="diffSelect">
+            <option value="AUTO">AUTO (Exam Blueprint Mix)</option>
+            <option value="EASY">EASY</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="HARD">HARD</option>
+          </select>
+        </div>
+        <div>
+          <label>Count</label>
+          <input type="number" id="countInput" value="5" min="1" max="50" />
+        </div>
+        <div>
+          <button id="generateBtn">Generate Questions</button>
+        </div>
+        <div>
+          <button id="auditBtn" class="secondary">Run 1,000-Q Audit</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="auditOutput"></div>
+    <div id="questionsContainer"></div>
+  </div>
+
+  <script>
+    /* ================= 1. CORE MATH UTILS ================= */
+    const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const shuffle = (arr) => {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    };
+    const gcd = (a, b) => {
+      a = Math.abs(a);
+      b = Math.abs(b);
+      while (b !== 0) [a, b] = [b, a % b];
+      return a || 1;
+    };
+
+    class Fraction {
+      constructor(num, den = 1) {
+        if (den === 0) throw new Error("Denominator cannot be zero");
+        if (den < 0) { num = -num; den = -den; }
+        const common = gcd(num, den);
+        this.num = num / common;
+        this.den = den / common;
+      }
+      add(o) { return new Fraction(this.num * o.den + o.num * this.den, this.den * o.den); }
+      sub(o) { return new Fraction(this.num * o.den - o.num * this.den, this.den * o.den); }
+      mul(o) { return new Fraction(this.num * o.num, this.den * o.den); }
+      div(o) { return new Fraction(this.num * o.den, this.den * o.num); }
+      isInteger() { return this.den === 1; }
+      toExamString() {
+        if (this.den === 1) return `${this.num}`;
+        const whole = Math.trunc(this.num / this.den);
+        const rem = Math.abs(this.num % this.den);
+        return whole === 0 ? `${this.num}/${this.den}` : `${whole} ${rem}/${this.den}`;
+      }
+    }
+
+    /* ================= 2. DISTRACTOR ENGINE ================= */
+    function buildOptions(correctValue, type = "INTEGER", offsets = [-10, -5, -2, -1, 1, 2, 5, 10], decimalPlaces = 2) {
+      const distractors = new Set();
+
+      if (type === "INTEGER") {
+        const ans = Number(correctValue);
+        const fallbackPool = [...offsets, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 14, 16, 18, 20];
+        let safety = 0;
+        while (distractors.size < 4 && safety < 200) {
+          safety++;
+          const offset = fallbackPool[randInt(0, fallbackPool.length - 1)];
+          const cand = ans + offset;
+          if (cand !== ans && (ans <= 0 || cand > 0)) distractors.add(String(cand));
+        }
+        const allOptions = shuffle([String(ans), ...distractors]);
+        return { options: allOptions, correctOptionIndex: allOptions.indexOf(String(ans)) };
+      }
+
+      if (type === "DECIMAL") {
+        const ans = Number(correctValue);
+        const correctStr = ans.toFixed(decimalPlaces);
+        const scale = Math.pow(10, decimalPlaces);
+        const intAns = Math.round(ans * scale);
+        const decOffsets = [-100, -50, -20, -10, -5, -2, -1, 1, 2, 5, 10, 20, 50, 100];
+        let safety = 0;
+        while (distractors.size < 4 && safety < 200) {
+          safety++;
+          const candInt = intAns + decOffsets[randInt(0, decOffsets.length - 1)];
+          if (candInt > 0 && candInt !== intAns) {
+            distractors.add((candInt / scale).toFixed(decimalPlaces));
+          }
+        }
+        const allOptions = shuffle([correctStr, ...distractors]);
+        return { options: allOptions, correctOptionIndex: allOptions.indexOf(correctStr) };
+      }
+
+      if (type === "FRACTION") {
+        const correctStr = correctValue.toExamString();
+        let safety = 0;
+        while (distractors.size < 4 && safety < 200) {
+          safety++;
+          const numDelta = randInt(-4, 4) || 1;
+          const denDelta = randInt(-2, 3);
+          const newDen = Math.max(2, correctValue.den + denDelta);
+          const newNum = Math.max(1, correctValue.num + numDelta + safety % 3);
+          const cand = new Fraction(newNum, newDen).toExamString();
+          if (cand !== correctStr) distractors.add(cand);
+        }
+        const allOptions = shuffle([correctStr, ...distractors]);
+        return { options: allOptions, correctOptionIndex: allOptions.indexOf(correctStr) };
+      }
+    }
+
+    /* ================= 3. DIFFICULTY & EXAM CONFIGS ================= */
+    const EXAM_BLUEPRINTS = {
+      RRB_CLERK_PRELIMS: { EASY: 0.7, MEDIUM: 0.3, HARD: 0.0 },
+      IBPS_CLERK_PRELIMS: { EASY: 0.4, MEDIUM: 0.5, HARD: 0.1 },
+      IBPS_PO_MAINS: { EASY: 0.0, MEDIUM: 0.3, HARD: 0.7 },
+    };
+
+    const SIMPLIFICATION_PROFILES = {
+      EASY: {
+        distractorOffsets: [-15, -10, -5, -2, 2, 5, 10, 15],
+        vbodmas: { divisorRange: [5, 15], quotientRange: [8, 25], multiplierRange: [2, 9], useVinculum: false },
+        percentFraction: { termCount: 2, allowedTiers: ["EASY"], multiplierRange: [10, 60] },
+        mixedFractions: { termCount: 2, wholeRange: [2, 8], denominators: [2, 3, 4, 5, 6] },
+        squaresCubesRoots: { sqRootRange: [11, 25], cubeRootRange: [4, 10], allowSquaredRhs: false },
+        surdsIndices: { bases: [2, 3, 5], exponentMode: "INTEGER" },
+        decimals: { termCount: 3, decimalPlaces: 2, maxDigit: 6 },
+        algebraicIdentities: { pattern: "DIFF_OF_SQUARES", rangeA: [40, 90], rangeB: [10, 35] },
+        ladderFractions: { steps: 2, maxWhole: 3, maxDen: 5 },
+        unitDigitSum: { minVal: 1000, maxVal: 4999, distinctUnitDigits: true },
+      },
+      MEDIUM: {
+        distractorOffsets: [-10, -5, -3, -2, -1, 1, 2, 3, 5, 10],
+        vbodmas: { divisorRange: [12, 35], quotientRange: [15, 45], multiplierRange: [4, 16], useVinculum: true },
+        percentFraction: { termCount: 3, allowedTiers: ["EASY", "MEDIUM"], multiplierRange: [25, 150] },
+        mixedFractions: { termCount: 3, wholeRange: [4, 14], denominators: [3, 4, 6, 8, 9, 12] },
+        squaresCubesRoots: { sqRootRange: [22, 55], cubeRootRange: [8, 18], allowSquaredRhs: true },
+        surdsIndices: { bases: [2, 3, 5, 6, 7], exponentMode: "DECIMAL" },
+        decimals: { termCount: 4, decimalPlaces: 3, maxDigit: 8 },
+        algebraicIdentities: { pattern: "SUM_OF_CUBES", rangeA: [200, 750], rangeB: [100, 250] },
+        ladderFractions: { steps: 3, maxWhole: 3, maxDen: 6 },
+        unitDigitSum: { minVal: 3000, maxVal: 19999, distinctUnitDigits: true },
+      },
+      HARD: {
+        distractorOffsets: [-4, -3, -2, -1, 1, 2, 3, 4],
+        vbodmas: { divisorRange: [18, 65], quotientRange: [25, 85], multiplierRange: [7, 24], useVinculum: true },
+        percentFraction: { termCount: 3, allowedTiers: ["MEDIUM", "HARD"], multiplierRange: [50, 280] },
+        mixedFractions: { termCount: 3, wholeRange: [6, 22], denominators: [6, 7, 8, 9, 11, 12, 15] },
+        squaresCubesRoots: { sqRootRange: [45, 95], cubeRootRange: [12, 25], allowSquaredRhs: true },
+        surdsIndices: { bases: [2, 3, 4, 5, 6, 7], exponentMode: "DECIMAL" },
+        decimals: { termCount: 5, decimalPlaces: 3, maxDigit: 9 },
+        algebraicIdentities: { pattern: "DIFF_OF_CUBES_PLUS_SQUARE", rangeA: [350, 850], rangeB: [120, 320] },
+        ladderFractions: { steps: 3, maxWhole: 5, maxDen: 9 },
+        unitDigitSum: { minVal: 12000, maxVal: 89999, distinctUnitDigits: false },
+      },
+    };
+
+    const PERCENT_FRACTIONS = [
+      { pct: "20%", num: 1, den: 5, tier: "EASY" },
+      { pct: "25%", num: 1, den: 4, tier: "EASY" },
+      { pct: "50%", num: 1, den: 2, tier: "EASY" },
+      { pct: "75%", num: 3, den: 4, tier: "EASY" },
+      { pct: "12.5%", num: 1, den: 8, tier: "EASY" },
+      { pct: "37.5%", num: 3, den: 8, tier: "MEDIUM" },
+      { pct: "62.5%", num: 5, den: 8, tier: "MEDIUM" },
+      { pct: "16.66%", num: 1, den: 6, tier: "MEDIUM" },
+      { pct: "14.28%", num: 1, den: 7, tier: "MEDIUM" },
+      { pct: "11.11%", num: 1, den: 9, tier: "MEDIUM" },
+      { pct: "9.09%", num: 1, den: 11, tier: "MEDIUM" },
+      { pct: "8.33%", num: 1, den: 12, tier: "MEDIUM" },
+      { pct: "87.5%", num: 7, den: 8, tier: "HARD" },
+      { pct: "83.33%", num: 5, den: 6, tier: "HARD" },
+      { pct: "28.56%", num: 2, den: 7, tier: "HARD" },
+      { pct: "42.84%", num: 3, den: 7, tier: "HARD" },
+      { pct: "41.66%", num: 5, den: 12, tier: "HARD" },
+      { pct: "58.33%", num: 7, den: 12, tier: "HARD" },
+      { pct: "6.66%", num: 1, den: 15, tier: "HARD" },
+      { pct: "6.25%", num: 1, den: 16, tier: "HARD" },
+    ];
+
+    /* ================= 4. GENERATORS (TYPES 1–9) ================= */
+    function generateType1(exam, difficulty) {
+      const cfg = SIMPLIFICATION_PROFILES[difficulty].vbodmas;
+      const offsets = SIMPLIFICATION_PROFILES[difficulty].distractorOffsets;
+      const C = randInt(...cfg.divisorRange);
+      const quotient = randInt(...cfg.quotientRange);
+      const B = C * quotient;
+      const D = randInt(...cfg.multiplierRange);
+      const prodTerm = quotient * D;
+      const F = randInt(5, 25);
+      const E = F + randInt(6, 30);
+      const bracketVal = E - F;
+      const minA = Math.max(100, bracketVal - prodTerm + 40);
+      const A = randInt(minA, minA + (difficulty === "EASY" ? 400 : 1500));
+      const answer = A + prodTerm - bracketVal;
+      const { options, correctOptionIndex } = buildOptions(answer, "INTEGER", offsets);
+      const bracketStr = cfg.useVinculum ? `(${E} - ${F})` : `${E} - ${F}`;
+      return {
+        questionId: `SIMP_T1_${difficulty}_${randInt(1000, 9999)}`,
+        exam, topic: "Simplification", subType: "TYPE_1_VBODMAS", difficulty,
+        questionText: `${A} + ${B} ÷ ${C} × ${D} - ${bracketStr} = ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `Step 1 (Bracket): ${E} - ${F} = ${bracketVal}`,
+          `Step 2 (Division): ${B} ÷ ${C} = ${quotient}`,
+          `Step 3 (Multiplication): ${quotient} × ${D} = ${prodTerm}`,
+          `Step 4 (Result): ${A} + ${prodTerm} - ${bracketVal} = ${answer}`
+        ]
+      };
+    }
+
+    function generateType2(exam, difficulty) {
+      const cfg = SIMPLIFICATION_PROFILES[difficulty].percentFraction;
+      const offsets = SIMPLIFICATION_PROFILES[difficulty].distractorOffsets;
+      const pool = PERCENT_FRACTIONS.filter(f => cfg.allowedTiers.includes(f.tier));
+      const f1 = pickRandom(pool), f2 = pickRandom(pool);
+      const N1 = f1.den * randInt(...cfg.multiplierRange);
+      const N2 = f2.den * randInt(...cfg.multiplierRange);
+      const val1 = (f1.num * N1) / f1.den, val2 = (f2.num * N2) / f2.den;
+
+      if (cfg.termCount === 2) {
+        const answer = val1 + val2;
+        const { options, correctOptionIndex } = buildOptions(answer, "INTEGER", offsets);
+        return {
+          questionId: `SIMP_T2_${difficulty}_${randInt(1000, 9999)}`,
+          exam, topic: "Simplification", subType: "TYPE_2_PERCENT_FRACTION", difficulty,
+          questionText: `${f1.pct} of ${N1} + ${f2.pct} of ${N2} = ?`,
+          options, correctOptionIndex, answer: String(answer),
+          solutionSteps: [
+            `${f1.pct} of ${N1} = (${f1.num}/${f1.den}) × ${N1} = ${val1}`,
+            `${f2.pct} of ${N2} = (${f2.num}/${f2.den}) × ${N2} = ${val2}`,
+            `Total = ${val1} + ${val2} = ${answer}`
+          ]
+        };
+      }
+      const f3 = pickRandom(pool);
+      const maxMult3 = Math.max(5, Math.floor((val1 + val2 - 15) / f3.num));
+      const N3 = f3.den * randInt(4, Math.max(4, Math.min(cfg.multiplierRange[1], maxMult3)));
+      const val3 = (f3.num * N3) / f3.den;
+      const answer = val1 + val2 - val3;
+      const { options, correctOptionIndex } = buildOptions(answer, "INTEGER", offsets);
+      return {
+        questionId: `SIMP_T2_${difficulty}_${randInt(1000, 9999)}`,
+        exam, topic: "Simplification", subType: "TYPE_2_PERCENT_FRACTION", difficulty,
+        questionText: `${f1.pct} of ${N1} + ${f2.pct} of ${N2} - ${f3.pct} of ${N3} = ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `${f1.pct} of ${N1} = (${f1.num}/${f1.den}) × ${N1} = ${val1}`,
+          `${f2.pct} of ${N2} = (${f2.num}/${f2.den}) × ${N2} = ${val2}`,
+          `${f3.pct} of ${N3} = (${f3.num}/${f3.den}) × ${N3} = ${val3}`,
+          `Total = ${val1} + ${val2} - ${val3} = ${answer}`
+        ]
+      };
+    }
+
+    function createMixed(wholeRange, denominators) {
+      const den = pickRandom(denominators);
+      const num = randInt(1, den - 1);
+      const whole = randInt(...wholeRange);
+      return {
+        display: `${whole} ${num}/${den}`,
+        whole,
+        fracPart: new Fraction(num, den),
+        totalFrac: new Fraction(whole * den + num, den),
+      };
+    }
+
+    function generateType3(exam, difficulty) {
+      const cfg = SIMPLIFICATION_PROFILES[difficulty].mixedFractions;
+      const offsets = SIMPLIFICATION_PROFILES[difficulty].distractorOffsets;
+      const m1 = createMixed(cfg.wholeRange, cfg.denominators);
+      const m2 = createMixed(cfg.wholeRange, cfg.denominators);
+
+      if (cfg.termCount === 2) {
+        const res = m1.totalFrac.add(m2.totalFrac);
+        const type = res.isInteger() ? "INTEGER" : "FRACTION";
+        const { options, correctOptionIndex } = buildOptions(res.isInteger() ? res.num : res, type, offsets);
+        return {
+          questionId: `SIMP_T3_${difficulty}_${randInt(1000, 9999)}`,
+          exam, topic: "Simplification", subType: "TYPE_3_MIXED_FRACTIONS", difficulty,
+          questionText: `${m1.display} + ${m2.display} = ?`,
+          options, correctOptionIndex, answer: res.toExamString(),
+          solutionSteps: [
+            `Whole part: ${m1.whole} + ${m2.whole} = ${m1.whole + m2.whole}`,
+            `Fraction part: ${m1.fracPart.toExamString()} + ${m2.fracPart.toExamString()} = ${m1.fracPart.add(m2.fracPart).toExamString()}`,
+            `Combined = ${res.toExamString()}`
+          ]
+        };
+      }
+      const maxW3 = Math.max(1, m1.whole + m2.whole - 3);
+      const m3 = createMixed([1, maxW3], cfg.denominators);
+      const res = m1.totalFrac.add(m2.totalFrac).sub(m3.totalFrac);
+      const type = res.isInteger() ? "INTEGER" : "FRACTION";
+      const { options, correctOptionIndex } = buildOptions(res.isInteger() ? res.num : res, type, offsets);
+      return {
+        questionId: `SIMP_T3_${difficulty}_${randInt(1000, 9999)}`,
+        exam, topic: "Simplification", subType: "TYPE_3_MIXED_FRACTIONS", difficulty,
+        questionText: `${m1.display} + ${m2.display} - ${m3.display} = ?`,
+        options, correctOptionIndex, answer: res.toExamString(),
+        solutionSteps: [
+          `Whole part: ${m1.whole} + ${m2.whole} - ${m3.whole} = ${m1.whole + m2.whole - m3.whole}`,
+          `Combined = ${res.toExamString()}`
+        ]
+      };
+    }
+
+    function generateType4(exam, difficulty) {
+      const cfg = SIMPLIFICATION_PROFILES[difficulty].squaresCubesRoots;
+      const offsets = SIMPLIFICATION_PROFILES[difficulty].distractorOffsets;
+      const rootA = randInt(...cfg.sqRootRange);
+      const rootB = randInt(...cfg.cubeRootRange);
+      const sqA = rootA * rootA, cubeB = rootB * rootB * rootB;
+
+      if (cfg.allowSquaredRhs) {
+        const targetAns = randInt(5, 22);
+        const rhsSquared = targetAns * targetAns;
+        const extraTerm = rhsSquared - (rootA + rootB);
+        const sign = extraTerm >= 0 ? "+" : "-";
+        const absExtra = Math.abs(extraTerm);
+        const { options, correctOptionIndex } = buildOptions(targetAns, "INTEGER", offsets);
+        return {
+          questionId: `SIMP_T4_${difficulty}_${randInt(1000, 9999)}`,
+          exam, topic: "Simplification", subType: "TYPE_4_SQUARES_CUBES_ROOTS", difficulty,
+          questionText: `√${sqA} + ³√${cubeB} ${sign} ${absExtra} = ?²`,
+          options, correctOptionIndex, answer: String(targetAns),
+          solutionSteps: [
+            `√${sqA} = ${rootA}, ³√${cubeB} = ${rootB}`,
+            `${rootA} + ${rootB} ${sign} ${absExtra} = ${rhsSquared} = ${targetAns}² → ? = ${targetAns}`
+          ]
+        };
+      }
+      const baseC = randInt(8, 20);
+      const sqC = baseC * baseC;
+      const answer = rootA + rootB + sqC;
+      const { options, correctOptionIndex } = buildOptions(answer, "INTEGER", offsets);
+      return {
+        questionId: `SIMP_T4_${difficulty}_${randInt(1000, 9999)}`,
+        exam, topic: "Simplification", subType: "TYPE_4_SQUARES_CUBES_ROOTS", difficulty,
+        questionText: `√${sqA} + ³√${cubeB} + ${baseC}² = ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `√${sqA} = ${rootA}, ³√${cubeB} = ${rootB}, ${baseC}² = ${sqC}`,
+          `Total = ${rootA} + ${rootB} + ${sqC} = ${answer}`
+        ]
+      };
+    }
+
+    function generateType5(exam, difficulty) {
+      const cfg = SIMPLIFICATION_PROFILES[difficulty].surdsIndices;
+      const offsets = SIMPLIFICATION_PROFILES[difficulty].distractorOffsets;
+      const base = pickRandom(cfg.bases);
+      const p1 = pickRandom([2, 3]), p2 = pickRandom([2, 3]);
+
+      if (cfg.exponentMode === "INTEGER") {
+        const p3 = pickRandom([1, 2]);
+        const e1 = randInt(2, 5), e2 = randInt(2, 5), e3 = randInt(1, 3);
+        const answer = p1 * e1 + p2 * e2 - p3 * e3;
+        const { options, correctOptionIndex } = buildOptions(answer, "INTEGER", offsets);
+        return {
+          questionId: `SIMP_T5_${difficulty}_${randInt(1000, 9999)}`,
+          exam, topic: "Simplification", subType: "TYPE_5_SURDS_INDICES", difficulty,
+          questionText: `(${Math.pow(base, p1)})^${e1} × (${Math.pow(base, p2)})^${e2} ÷ (${Math.pow(base, p3)})^${e3} = ${base}^?`,
+          options, correctOptionIndex, answer: String(answer),
+          solutionSteps: [
+            `Base ${base} exponents: (${p1}×${e1}) + (${p2}×${e2}) - (${p3}×${e3}) = ${answer}`
+          ]
+        };
+      }
+      // Decimal mode: guarantee exact integer answer without recursion
+      const p3 = 1;
+      const e1Tenths = randInt(11, 24);
+      const e2Tenths = randInt(11, 22);
+      const sumTenths = p1 * e1Tenths + p2 * e2Tenths;
+      const targetAnswer = randInt(3, Math.floor(sumTenths / 10) - 1);
+      const e3Tenths = sumTenths - targetAnswer * 10;
+      const { options, correctOptionIndex } = buildOptions(targetAnswer, "INTEGER", offsets);
+      return {
+        questionId: `SIMP_T5_${difficulty}_${randInt(1000, 9999)}`,
+        exam, topic: "Simplification", subType: "TYPE_5_SURDS_INDICES", difficulty,
+        questionText: `(${Math.pow(base, p1)})^${(e1Tenths / 10).toFixed(1)} × (${Math.pow(base, p2)})^${(e2Tenths / 10).toFixed(1)} ÷ (${base})^${(e3Tenths / 10).toFixed(1)} = ${base}^?`,
+        options, correctOptionIndex, answer: String(targetAnswer),
+        solutionSteps: [
+          `Convert to base ${base}: ${(p1 * e1Tenths) / 10} + ${(p2 * e2Tenths) / 10} - ${e3Tenths / 10} = ${targetAnswer}`
+        ]
+      };
+    }
+
+    function generateType6(exam, difficulty) {
+      const cfg = SIMPLIFICATION_PROFILES[difficulty].decimals;
+      const scale = Math.pow(10, cfg.decimalPlaces);
+      const d = randInt(2, cfg.maxDigit);
+      const rawPatterns = cfg.decimalPlaces === 2
+        ? [`${d}.${d}${d}`, `${d}${d}.0${d}`, `0.${d}${d}`, `${d}.0${d}`]
+        : [`${d}.${d}${d}`, `0.${d}0${d}`, `${d}${d}.00${d}`, `${d}.${d}${d}${d}`, `0.0${d}${d}`];
+      const selected = rawPatterns.slice(0, cfg.termCount);
+      const scaledValues = selected.map(s => Math.round(parseFloat(s) * scale));
+      let totalScaled = 0;
+      const exprParts = [];
+      scaledValues.forEach((val, idx) => {
+        if (idx === scaledValues.length - 1 && difficulty === "HARD") {
+          totalScaled -= val;
+          exprParts.push(`- ${selected[idx]}`);
+        } else {
+          totalScaled += val;
+          exprParts.push(idx === 0 ? selected[idx] : `+ ${selected[idx]}`);
+        }
+      });
+      const answerNum = totalScaled / scale;
+      const answerStr = answerNum.toFixed(cfg.decimalPlaces);
+      const { options, correctOptionIndex } = buildOptions(
+        answerNum, "DECIMAL", SIMPLIFICATION_PROFILES[difficulty].distractorOffsets, cfg.decimalPlaces
+      );
+      return {
+        questionId: `SIMP_T6_${difficulty}_${randInt(1000, 9999)}`,
+        exam, topic: "Simplification", subType: "TYPE_6_DECIMALS", difficulty,
+        questionText: `${exprParts.join(" ")} = ?`,
+        options, correctOptionIndex, answer: answerStr,
+        solutionSteps: [`Align decimal places: ${exprParts.join(" ")} = ${answerStr}`]
+      };
+    }
+
+    function generateType7(exam, difficulty) {
+      const cfg = SIMPLIFICATION_PROFILES[difficulty].algebraicIdentities;
+      const offsets = SIMPLIFICATION_PROFILES[difficulty].distractorOffsets;
+      const a = randInt(...cfg.rangeA), b = randInt(...cfg.rangeB);
+
+      if (cfg.pattern === "DIFF_OF_SQUARES") {
+        const diff = a - b, answer = a + b;
+        const { options, correctOptionIndex } = buildOptions(answer, "INTEGER", offsets);
+        return {
+          questionId: `SIMP_T7_${difficulty}_${randInt(1000, 9999)}`,
+          exam, topic: "Simplification", subType: "TYPE_7_ALGEBRAIC_IDENTITIES", difficulty,
+          questionText: `(${a}² - ${b}²) ÷ ${diff} = ?`,
+          options, correctOptionIndex, answer: String(answer),
+          solutionSteps: [`(a² - b²) ÷ (a - b) = a + b = ${a} + ${b} = ${answer}`]
+        };
+      }
+      if (cfg.pattern === "SUM_OF_CUBES") {
+        const answer = a + b;
+        const { options, correctOptionIndex } = buildOptions(answer, "INTEGER", offsets);
+        return {
+          questionId: `SIMP_T7_${difficulty}_${randInt(1000, 9999)}`,
+          exam, topic: "Simplification", subType: "TYPE_7_ALGEBRAIC_IDENTITIES", difficulty,
+          questionText: `(${a}³ + ${b}³) ÷ (${a}² - ${a} × ${b} + ${b}²) = ?`,
+          options, correctOptionIndex, answer: String(answer),
+          solutionSteps: [`(a³ + b³) ÷ (a² - ab + b²) = a + b = ${a} + ${b} = ${answer}`]
+        };
+      }
+      const c = randInt(11, 25);
+      const answer = a - b + c * c;
+      const { options, correctOptionIndex } = buildOptions(answer, "INTEGER", offsets);
+      return {
+        questionId: `SIMP_T7_${difficulty}_${randInt(1000, 9999)}`,
+        exam, topic: "Simplification", subType: "TYPE_7_ALGEBRAIC_IDENTITIES", difficulty,
+        questionText: `[ (${a}³ - ${b}³) ÷ (${a}² + ${a} × ${b} + ${b}²) ] + ${c}² = ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [`(a - b) + c² = (${a} - ${b}) + ${c * c} = ${answer}`]
+      };
+    }
+
+    function generateType8(exam, difficulty) {
+      const cfg = SIMPLIFICATION_PROFILES[difficulty].ladderFractions;
+      const offsets = SIMPLIFICATION_PROFILES[difficulty].distractorOffsets;
+      const baseDen = randInt(2, cfg.maxDen);
+      const baseNum = randInt(1, baseDen - 1);
+      const w1 = randInt(1, cfg.maxWhole), w2 = randInt(1, cfg.maxWhole);
+      const step1 = new Fraction(w1).add(new Fraction(baseNum, baseDen));
+      const inv1 = new Fraction(1).div(step1);
+      const step2 = new Fraction(w2).add(inv1);
+
+      if (cfg.steps === 2) {
+        const { options, correctOptionIndex } = buildOptions(step2, "FRACTION", offsets);
+        return {
+          questionId: `SIMP_T8_${difficulty}_${randInt(1000, 9999)}`,
+          exam, topic: "Simplification", subType: "TYPE_8_LADDER_FRACTIONS", difficulty,
+          questionText: `${w2} + 1 / (${w1} + ${baseNum}/${baseDen}) = ?`,
+          options, correctOptionIndex, answer: step2.toExamString(),
+          solutionSteps: [
+            `Bottom rung: ${w1} + ${baseNum}/${baseDen} = ${step1.num}/${step1.den}`,
+            `Top rung: ${w2} + ${inv1.num}/${inv1.den} = ${step2.toExamString()}`
+          ]
+        };
+      }
+      const w3 = randInt(1, cfg.maxWhole);
+      const inv2 = new Fraction(1).div(step2);
+      const step3 = new Fraction(w3).add(inv2);
+      const { options, correctOptionIndex } = buildOptions(step3, "FRACTION", offsets);
+      return {
+        questionId: `SIMP_T8_${difficulty}_${randInt(1000, 9999)}`,
+        exam, topic: "Simplification", subType: "TYPE_8_LADDER_FRACTIONS", difficulty,
+        questionText: `${w3} + 1 / (${w2} + 1 / (${w1} + ${baseNum}/${baseDen})) = ?`,
+        options, correctOptionIndex, answer: step3.toExamString(),
+        solutionSteps: [
+          `Bottom: ${step1.num}/${step1.den} → Middle: ${step2.num}/${step2.den} → Top: ${step3.toExamString()}`
+        ]
+      };
+    }
+
+    function generateType9(exam, difficulty) {
+      const cfg = SIMPLIFICATION_PROFILES[difficulty].unitDigitSum;
+      const t1 = randInt(cfg.minVal, cfg.maxVal);
+      const t2 = randInt(cfg.minVal, cfg.maxVal);
+      const t3 = randInt(Math.floor(cfg.minVal / 2), Math.floor((t1 + t2) * 0.6));
+      const t4 = randInt(cfg.minVal, cfg.maxVal);
+      const answer = t1 + t2 - t3 + t4;
+      const distractors = new Set();
+
+      if (cfg.distinctUnitDigits) {
+        const usedUnits = new Set([answer % 10]);
+        let safety = 0;
+        while (distractors.size < 4 && safety < 200) {
+          safety++;
+          const cand = answer + randInt(-95, 95);
+          const unit = ((cand % 10) + 10) % 10;
+          if (cand > 0 && !usedUnits.has(unit)) {
+            usedUnits.add(unit);
+            distractors.add(String(cand));
+          }
+        }
+      } else {
+        const offsets = [-200, -100, -40, -30, -20, -10, 10, 20, 30, 40, 100, 200];
+        while (distractors.size < 4) {
+          const cand = answer + pickRandom(offsets);
+          if (cand > 0 && cand !== answer) distractors.add(String(cand));
+        }
+      }
+      const options = shuffle([String(answer), ...distractors]);
+      return {
+        questionId: `SIMP_T9_${difficulty}_${randInt(1000, 9999)}`,
+        exam, topic: "Simplification", subType: "TYPE_9_UNIT_DIGIT_SUM", difficulty,
+        questionText: `${t1} + ${t2} - ${t3} + ${t4} = ?`,
+        options, correctOptionIndex: options.indexOf(String(answer)), answer: String(answer),
+        solutionSteps: [
+          `Unit digit ends in ${answer % 10}`,
+          `Exact value: ${t1} + ${t2} - ${t3} + ${t4} = ${answer}`
+        ]
+      };
+    }
+
+    const TYPE_MAP = {
+      1: generateType1, 2: generateType2, 3: generateType3,
+      4: generateType4, 5: generateType5, 6: generateType6,
+      7: generateType7, 8: generateType8, 9: generateType9
+    };
+
+    function resolveDifficulty(exam, reqDiff) {
+      if (reqDiff && reqDiff !== "AUTO") return reqDiff;
+      const dist = EXAM_BLUEPRINTS[exam] || { EASY: 0.3, MEDIUM: 0.5, HARD: 0.2 };
+      const r = Math.random();
+      if (r < dist.EASY) return "EASY";
+      if (r < dist.EASY + dist.MEDIUM) return "MEDIUM";
+      return "HARD";
+    }
+
+    /* ================= 5. UI CONTROLLER & AUDIT ================= */
+    function renderQuestions() {
+      const exam = document.getElementById("examSelect").value;
+      const typeVal = document.getElementById("typeSelect").value;
+      const diffVal = document.getElementById("diffSelect").value;
+      const count = parseInt(document.getElementById("countInput").value, 10) || 5;
+      const allowedTypes = typeVal === "ALL" ? [1,2,3,4,5,6,7,8,9] : [Number(typeVal)];
+
+      const container = document.getElementById("questionsContainer");
+      container.innerHTML = "";
+
+      for (let i = 0; i < count; i++) {
+        const t = pickRandom(allowedTypes);
+        const diff = resolveDifficulty(exam, diffVal);
+        const q = TYPE_MAP[t](exam, diff);
+
+        const card = document.createElement("div");
+        card.className = "question-card";
+        card.innerHTML = `
+          <div class="meta-row">
+            <span class="badge">${q.exam}</span>
+            <span class="badge">${q.subType}</span>
+            <span class="badge ${q.difficulty}">${q.difficulty}</span>
+          </div>
+          <div class="q-text">Q${i + 1}. ${q.questionText}</div>
+          <div class="options-grid">
+            ${q.options.map((opt, idx) => `
+              <button class="opt-btn" data-idx="${idx}" data-correct="${q.correctOptionIndex}">
+                (${String.fromCharCode(65 + idx)}) ${opt}
+              </button>
+            `).join("")}
+          </div>
+          <details>
+            <summary>View Solution & Raw JSON</summary>
+            <p><strong>Answer:</strong> ${q.answer}</p>
+            <ul>${q.solutionSteps.map(s => `<li>${s}</li>`).join("")}</ul>
+            <pre>${JSON.stringify(q, null, 2)}</pre>
+          </details>
+        `;
+
+        const btns = card.querySelectorAll(".opt-btn");
+        btns.forEach(btn => {
+          btn.addEventListener("click", () => {
+            const idx = Number(btn.dataset.idx);
+            const corr = Number(btn.dataset.correct);
+            btns.forEach((b, bIdx) => {
+              b.classList.remove("correct", "wrong");
+              if (bIdx === corr) b.classList.add("correct");
+              else if (bIdx === idx) b.classList.add("wrong");
+            });
+          });
+        });
+
+        container.appendChild(card);
+      }
+    }
+
+    function runAudit() {
+      const start = performance.now();
+      let errors = 0;
+      const diffs = ["EASY", "MEDIUM", "HARD"];
+      for (let i = 0; i < 1000; i++) {
+        const t = (i % 9) + 1;
+        const d = diffs[i % 3];
+        const q = TYPE_MAP[t]("IBPS_CLERK_PRELIMS", d);
+        const uniqueOpts = new Set(q.options);
+        const hasBadOpt = q.options.some(o => !o || o.includes("NaN") || o.includes("undefined") || o.startsWith("-"));
+        if (q.options.length !== 5 || uniqueOpts.size !== 5 || q.options[q.correctOptionIndex] !== q.answer || hasBadOpt) {
+          errors++;
+          console.error("Audit failure:", q);
+        }
+      }
+      const ms = (performance.now() - start).toFixed(1);
+      const banner = document.getElementById("auditOutput");
+      banner.innerHTML = `
+        <div class="audit-banner" style="border-left: 5px solid ${errors === 0 ? '#057a55' : '#e02424'}">
+          <strong>1,000-Question Audit Complete in ${ms} ms:</strong>
+          ${errors === 0
+            ? "✅ 1,000 / 1,000 Passed (0 NaN, 0 duplicate options, 0 negative traps across Types 1–9 & EASY/MEDIUM/HARD)"
+            : `❌ ${errors} errors found (check browser console)`}
+        </div>
+      `;
+    }
+
+    document.getElementById("generateBtn").addEventListener("click", renderQuestions);
+    document.getElementById("auditBtn").addEventListener("click", runAudit);
+    renderQuestions();
+  </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+{
+  "name": "banking-exam-preparation-platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n API,WEB \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:client": "node scripts/dev-protected.mjs",
+    "dev:server": "node --watch server/index.js",
+    "start": "node server/index.js",
+    "start:server": "node server/index.js",
+    "build": "node scripts/build-web.mjs",
+    "preview": "vite preview client",
+    "db:migrate": "node server/migrate.js",
+    "db:seed-admin": "node server/seed-admin.js",
+    "test": "node tests/verify_workflow.js && node tests/verify_syllabus_and_topics.js && node tests/verify_role_management.js",
+    "test:engine": "node server/question-engine/tests/auditGenerator.js && node server/question-engine/tests/auditApproximation.js && node server/question-engine/tests/auditNumberSeries.js",
+    "test:exam-engine": "node tests/verify_intelligent_exam_engine.js"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "bcryptjs": "^3.0.3",
+    "connect-pg-simple": "^10.0.0",
+    "cors": "^2.8.6",
+    "csv-parse": "^7.0.3",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.2",
+    "express-session": "^1.19.0",
+    "helmet": "^8.3.0",
+    "lucide-react": "latest",
+    "nodemailer": "^10.3.1",
+    "pg": "^8.23.1",
+    "razorpay": "^2.9.8",
+    "react": "latest",
+    "react-dom": "latest",
+    "read-excel-file": "^9.3.14",
+    "vite": "latest",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6",
+    "esbuild": "latest"
+  }
+}

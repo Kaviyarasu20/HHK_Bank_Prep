@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bank Exam Approximation Engine (Types 1–12) — Browser Test Bench</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --card: #ffffff;
+      --primary: #1a56db;
+      --success: #057a55;
+      --danger: #e02424;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 24px;
+    }
+    .container { max-width: 980px; margin: 0 auto; }
+    .header-card, .question-card, .audit-banner {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    h1 { margin: 0 0 16px 0; font-size: 20px; }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.92; }
+    button.secondary { background: #111827; }
+    .meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #e1effe;
+      color: #1e429f;
+    }
+    .badge.EASY { background: #def7ec; color: #03543f; }
+    .badge.MEDIUM { background: #fef3c7; color: #92400e; }
+    .badge.HARD { background: #fde8e8; color: #9b1c1c; }
+    .q-text {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 12px 0;
+      font-family: "Cambria Math", Georgia, serif;
+    }
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .opt-btn {
+      background: #f9fafb;
+      color: var(--text);
+      border: 1px solid var(--border);
+      text-align: left;
+      padding: 8px 12px;
+      font-weight: 500;
+    }
+    .opt-btn.correct {
+      background: #def7ec;
+      border-color: var(--success);
+      color: #03543f;
+      font-weight: 700;
+    }
+    .opt-btn.wrong {
+      background: #fde8e8;
+      border-color: var(--danger);
+      color: #9b1c1c;
+    }
+    details { font-size: 13px; color: var(--muted); margin-top: 8px; }
+    summary { cursor: pointer; font-weight: 600; color: var(--primary); }
+    pre {
+      background: #111827;
+      color: #e5e7eb;
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-card">
+      <h1>Bank Exam Approximation Engine (12 Exam-Level Sub-Types)</h1>
+      <div class="controls">
+        <div>
+          <label>Exam Blueprint</label>
+          <select id="examSelect">
+            <option value="IBPS_PO_PRELIMS">IBPS PO Prelims</option>
+            <option value="SBI_PO_PRELIMS">SBI PO Prelims</option>
+            <option value="RRB_PO_PRELIMS">RRB PO Prelims</option>
+            <option value="IBPS_CLERK_PRELIMS">IBPS Clerk Prelims</option>
+          </select>
+        </div>
+        <div>
+          <label>Approximation Sub-Type</label>
+          <select id="typeSelect">
+            <option value="ALL">All 12 Types</option>
+            <option value="1">1. Basic Arithmetic Approx</option>
+            <option value="2">2. Decimal Multiplication</option>
+            <option value="3">3. Decimal Division</option>
+            <option value="4">4. Percentage Approximation</option>
+            <option value="5">5. Fraction Approximation</option>
+            <option value="6">6. Square Root Approximation</option>
+            <option value="7">7. Cube Root Approximation</option>
+            <option value="8">8. Mixed Arithmetic</option>
+            <option value="9">9. Bracket-Based Approximation</option>
+            <option value="10">10. Multiple Operations</option>
+            <option value="11">11. Power-Based Approximation</option>
+            <option value="12">12. Combined Root & Arithmetic</option>
+          </select>
+        </div>
+        <div>
+          <label>Difficulty</label>
+          <select id="diffSelect">
+            <option value="MEDIUM">MEDIUM (PO Prelims Standard)</option>
+            <option value="EASY">EASY (Clerk Prelims)</option>
+            <option value="HARD">HARD (PO / Mains Trap)</option>
+            <option value="AUTO">AUTO (Blueprint Mix)</option>
+          </select>
+        </div>
+        <div>
+          <label>Count</label>
+          <input type="number" id="countInput" value="6" min="1" max="50" />
+        </div>
+        <div>
+          <button id="generateBtn">Generate Questions</button>
+        </div>
+        <div>
+          <button id="auditBtn" class="secondary">Run 1,000-Q Audit</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="auditOutput"></div>
+    <div id="questionsContainer"></div>
+  </div>
+
+  <script>
+    /* ================= 1. CORE & APPROX UTILS ================= */
+    const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const shuffle = (arr) => {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    };
+
+    /**
+     * Perturbs a clean integer N by ±0.01 to ±0.09 (or ±0.11) so it rounds back to N
+     * without creating large cumulative drift in multiplication/powers.
+     */
+    function perturbInt(n, decimals = 2) {
+      const goUp = Math.random() < 0.5;
+      if (decimals === 1) {
+        return goUp ? `${n}.1` : `${n - 1}.9`;
+      }
+      const smallCents = randInt(1, 9); // .01 to .09
+      const highCents = randInt(91, 99); // .91 to .99
+      return goUp
+        ? `${n}.0${smallCents}`
+        : `${n - 1}.${highCents}`;
+    }
+
+    /**
+     * Perturbs a perfect square or cube inside √ / ³√ so it isn't an exact integer
+     */
+    function perturbRadicand(exactPower) {
+      const delta = pickRandom([-3, -2, -1, 1, 2, 3]);
+      return exactPower + delta;
+    }
+
+    /**
+     * Builds 5 well-spaced options for Approximation so rounding drift never collides
+     */
+    function buildApproxOptions(correctInt, difficulty = "MEDIUM") {
+      const ans = Number(correctInt);
+      const stepMap = {
+        EASY: [-30, -20, -10, 10, 20, 30, 40],
+        MEDIUM: [-24, -16, -8, 8, 16, 24, 32],
+        HARD: [-15, -10, -5, 5, 10, 15, 20],
+      };
+      const offsets = stepMap[difficulty] || stepMap.MEDIUM;
+      const distractors = new Set();
+
+      let safety = 0;
+      while (distractors.size < 4 && safety < 200) {
+        safety++;
+        const cand = ans + pickRandom(offsets);
+        if (cand > 0 && cand !== ans) {
+          distractors.add(String(cand));
+        }
+      }
+      // Fallback if ans is very small
+      let step = 6;
+      while (distractors.size < 4) {
+        distractors.add(String(ans + step));
+        step += 6;
+      }
+
+      const allOptions = shuffle([String(ans), ...distractors]);
+      return {
+        options: allOptions,
+        correctOptionIndex: allOptions.indexOf(String(ans)),
+      };
+    }
+
+    /* ================= 2. DIFFICULTY PROFILES ================= */
+    const APPROX_PROFILES = {
+      EASY: {
+        multA: [12, 35], multB: [3, 9],
+        divQuot: [12, 40], divDen: [4, 12],
+        sqRange: [12, 30], cubeRange: [5, 12],
+        addRange: [40, 250],
+      },
+      MEDIUM: {
+        multA: [18, 55], multB: [6, 16],
+        divQuot: [20, 75], divDen: [8, 22],
+        sqRange: [22, 55], cubeRange: [8, 18],
+        addRange: [120, 650],
+      },
+      HARD: {
+        multA: [25, 85], multB: [11, 24],
+        divQuot: [35, 110], divDen: [12, 32],
+        sqRange: [35, 85], cubeRange: [11, 24],
+        addRange: [250, 1200],
+      },
+    };
+
+    /* ================= 3. 12 EXAM-LEVEL GENERATORS ================= */
+
+    // Type 1: Basic Arithmetic Approximation (A + B × C - D = ?)
+    function genType1(exam, diff) {
+      const cfg = APPROX_PROFILES[diff];
+      const A = randInt(...cfg.addRange);
+      const B = randInt(...cfg.multA);
+      const C = randInt(...cfg.multB);
+      const D = randInt(25, Math.min(200, A + B * C - 20));
+
+      const pA = perturbInt(A, 2), pB = perturbInt(B, 1), pC = perturbInt(C, 2), pD = perturbInt(D, 2);
+
+      if (diff === "HARD") {
+        const E = randInt(3, 9);
+        const pE = perturbInt(E, 1);
+        const ans = A + B * C - D * E;
+        const finalAns = ans > 20 ? ans : A + B * C + D * E;
+        const sign = ans > 20 ? "-" : "+";
+        const { options, correctOptionIndex } = buildApproxOptions(finalAns, diff);
+        return {
+          questionId: `APP_T1_${diff}_${randInt(1000,9999)}`,
+          exam, topic: "Approximation", subType: "TYPE_1_BASIC_ARITHMETIC", difficulty: diff,
+          questionText: `${pA} + ${pB} × ${pC} ${sign} ${pD} × ${pE} ≈ ?`,
+          options, correctOptionIndex, answer: String(finalAns),
+          solutionSteps: [
+            `Round to nearest integers: ${A} + ${B} × ${C} ${sign} ${D} × ${E}`,
+            `Apply BODMAS: ${A} + ${B * C} ${sign} ${D * E} = ${finalAns}`
+          ]
+        };
+      }
+
+      const answer = A + B * C - D;
+      const { options, correctOptionIndex } = buildApproxOptions(answer, diff);
+      return {
+        questionId: `APP_T1_${diff}_${randInt(1000,9999)}`,
+        exam, topic: "Approximation", subType: "TYPE_1_BASIC_ARITHMETIC", difficulty: diff,
+        questionText: `${pA} + ${pB} × ${pC} - ${pD} ≈ ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `Round values: ${A} + ${B} × ${C} - ${D}`,
+          `Multiply first: ${A} + ${B * C} - ${D} = ${answer}`
+        ]
+      };
+    }
+
+    // Type 2: Decimal Multiplication (A × B + C × D - E = ?)
+    function genType2(exam, diff) {
+      const cfg = APPROX_PROFILES[diff];
+      const A = randInt(...cfg.multA), B = randInt(...cfg.multB);
+      const C = randInt(...cfg.multA), D = randInt(3, 12);
+      const E = randInt(20, 120);
+
+      const pA = perturbInt(A, 1), pB = perturbInt(B, 1);
+      const pC = perturbInt(C, 2), pD = perturbInt(D, 1), pE = perturbInt(E, 2);
+
+      const answer = A * B + C * D - E;
+      const { options, correctOptionIndex } = buildApproxOptions(answer, diff);
+      return {
+        questionId: `APP_T2_${diff}_${randInt(1000,9999)}`,
+        exam, topic: "Approximation", subType: "TYPE_2_DECIMAL_MULTIPLICATION", difficulty: diff,
+        questionText: `${pA} × ${pB} + ${pC} × ${pD} - ${pE} ≈ ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `Approximate decimals: (${A} × ${B}) + (${C} × ${D}) - ${E}`,
+          `${A * B} + ${C * D} - ${E} = ${answer}`
+        ]
+      };
+    }
+
+    // Type 3: Decimal Division ((A ÷ B) + (C ÷ D) + E = ?)
+    function genType3(exam, diff) {
+      const cfg = APPROX_PROFILES[diff];
+      const B = randInt(...cfg.divDen), q1 = randInt(...cfg.divQuot), A = B * q1;
+      const D = randInt(...cfg.divDen), q2 = randInt(...cfg.divQuot), C = D * q2;
+      const E = randInt(30, 180);
+
+      const pA = perturbInt(A, 2), pB = perturbInt(B, 2);
+      const pC = perturbInt(C, 1), pD = perturbInt(D, 2), pE = perturbInt(E, 2);
+
+      const answer = q1 + q2 + E;
+      const { options, correctOptionIndex } = buildApproxOptions(answer, diff);
+      return {
+        questionId: `APP_T3_${diff}_${randInt(1000,9999)}`,
+        exam, topic: "Approximation", subType: "TYPE_3_DECIMAL_DIVISION", difficulty: diff,
+        questionText: `${pA} ÷ ${pB} + ${pC} ÷ ${pD} + ${pE} ≈ ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `Round terms: (${A} ÷ ${B}) + (${C} ÷ ${D}) + ${E}`,
+          `${q1} + ${q2} + ${E} = ${answer}`
+        ]
+      };
+    }
+
+    // Type 4: Percentage Approximation (P1% of N1 + P2% of N2 - K = ?)
+    function genType4(exam, diff) {
+      const pctPool = diff === "EASY" ? [15, 20, 25, 30, 40, 50] : [18, 24, 32, 35, 45, 55, 65, 75];
+      const P1 = pickRandom(pctPool), P2 = pickRandom(pctPool);
+      const N1 = randInt(2, 12) * 100;
+      const N2 = randInt(2, 10) * 100;
+      const K = randInt(25, 95);
+
+      const val1 = (P1 * N1) / 100;
+      const val2 = (P2 * N2) / 100;
+      const answer = val1 + val2 - K;
+
+      const pP1 = perturbInt(P1, 2), pN1 = perturbInt(N1, 2);
+      const pP2 = perturbInt(P2, 1), pN2 = perturbInt(N2, 2), pK = perturbInt(K, 2);
+
+      const { options, correctOptionIndex } = buildApproxOptions(answer, diff);
+      return {
+        questionId: `APP_T4_${diff}_${randInt(1000,9999)}`,
+        exam, topic: "Approximation", subType: "TYPE_4_PERCENTAGE_APPROX", difficulty: diff,
+        questionText: `${pP1}% of ${pN1} + ${pP2}% of ${pN2} - ${pK} ≈ ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `Round percentages & bases: (${P1}% of ${N1}) + (${P2}% of ${N2}) - ${K}`,
+          `${val1} + ${val2} - ${K} = ${answer}`
+        ]
+      };
+    }
+
+    // Type 5: Fraction Approximation ((A / B) × C + (D / E) × F ≈ ?)
+    function genType5(exam, diff) {
+      const B = randInt(6, 18), q1 = randInt(8, 25), A = B * q1, C = randInt(4, 15);
+      const E = randInt(5, 16), q2 = randInt(6, 20), D = E * q2, F = randInt(3, 12);
+
+      const answer = q1 * C + q2 * F;
+      const { options, correctOptionIndex } = buildApproxOptions(answer, diff);
+
+      return {
+        questionId: `APP_T5_${diff}_${randInt(1000,9999)}`,
+        exam, topic: "Approximation", subType: "TYPE_5_FRACTION_APPROX", difficulty: diff,
+        questionText: `(${perturbInt(A, 1)} / ${perturbInt(B, 2)}) × ${perturbInt(C, 2)} + (${perturbInt(D, 2)} / ${perturbInt(E, 1)}) × ${perturbInt(F, 2)} ≈ ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `Approximate fractions: (${A} / ${B}) × ${C} + (${D} / ${E}) × ${F}`,
+          `(${q1} × ${C}) + (${q2} × ${F}) = ${q1 * C} + ${q2 * F} = ${answer}`
+        ]
+      };
+    }
+
+    // Type 6: Square Root Approximation (√A × B + √C - D ≈ ?)
+    function genType6(exam, diff) {
+      const cfg = APPROX_PROFILES[diff];
+      const r1 = randInt(...cfg.sqRange);
+      const r2 = randInt(...cfg.sqRange);
+      const B = randInt(4, 14);
+      const D = randInt(20, 80);
+
+      const rad1 = perturbRadicand(r1 * r1);
+      const rad2 = perturbRadicand(r2 * r2);
+      const answer = r1 * B + r2 - D;
+
+      const { options, correctOptionIndex } = buildApproxOptions(answer, diff);
+      return {
+        questionId: `APP_T6_${diff}_${randInt(1000,9999)}`,
+        exam, topic: "Approximation", subType: "TYPE_6_SQUARE_ROOT_APPROX", difficulty: diff,
+        questionText: `√${rad1} × ${perturbInt(B, 2)} + √${rad2} - ${perturbInt(D, 2)} ≈ ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `√${rad1} ≈ ${r1} and √${rad2} ≈ ${r2}`,
+          `(${r1} × ${B}) + ${r2} - ${D} = ${r1 * B} + ${r2} - ${D} = ${answer}`
+        ]
+      };
+    }
+
+    // Type 7: Cube Root Approximation (³√A × B + ³√C × D ≈ ?)
+    function genType7(exam, diff) {
+      const cfg = APPROX_PROFILES[diff];
+      const c1 = randInt(...cfg.cubeRange);
+      const c2 = randInt(...cfg.cubeRange);
+      const B = randInt(5, 16);
+      const D = randInt(4, 15);
+
+      const rad1 = perturbRadicand(c1 * c1 * c1);
+      const rad2 = perturbRadicand(c2 * c2 * c2);
+      const answer = c1 * B + c2 * D;
+
+      const { options, correctOptionIndex } = buildApproxOptions(answer, diff);
+      return {
+        questionId: `APP_T7_${diff}_${randInt(1000,9999)}`,
+        exam, topic: "Approximation", subType: "TYPE_7_CUBE_ROOT_APPROX", difficulty: diff,
+        questionText: `³√${rad1} × ${perturbInt(B, 1)} + ³√${rad2} × ${perturbInt(D, 2)} ≈ ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `³√${rad1} ≈ ${c1} and ³√${rad2} ≈ ${c2}`,
+          `(${c1} × ${B}) + (${c2} × ${D}) = ${c1 * B} + ${c2 * D} = ${answer}`
+        ]
+      };
+    }
+
+    // Type 8: Mixed Arithmetic (A × B + C - D × E ≈ ?)
+    function genType8(exam, diff) {
+      const cfg = APPROX_PROFILES[diff];
+      const A = randInt(...cfg.multA), B = randInt(...cfg.multB);
+      const C = randInt(100, 450);
+      const D = randInt(8, 22), E = randInt(3, 8);
+
+      const answer = A * B + C - D * E;
+      const { options, correctOptionIndex } = buildApproxOptions(answer, diff);
+      return {
+        questionId: `APP_T8_${diff}_${randInt(1000,9999)}`,
+        exam, topic: "Approximation", subType: "TYPE_8_MIXED_ARITHMETIC", difficulty: diff,
+        questionText: `${perturbInt(A, 1)} × ${perturbInt(B, 1)} + ${perturbInt(C, 2)} - ${perturbInt(D, 2)} × ${perturbInt(E, 1)} ≈ ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `Round values: (${A} × ${B}) + ${C} - (${D} × ${E})`,
+          `${A * B} + ${C} - ${D * E} = ${answer}`
+        ]
+      };
+    }
+
+    // Type 9: Bracket-Based Approximation ((A + B) × C - (D ÷ E) ≈ ?)
+    function genType9(exam, diff) {
+      const A = randInt(25, 85), B = randInt(15, 65), C = randInt(4, 12);
+      const E = randInt(6, 18), q = randInt(10, 35), D = E * q;
+
+      const answer = (A + B) * C - q;
+      const { options, correctOptionIndex } = buildApproxOptions(answer, diff);
+      return {
+        questionId: `APP_T9_${diff}_${randInt(1000,9999)}`,
+        exam, topic: "Approximation", subType: "TYPE_9_BRACKET_APPROX", difficulty: diff,
+        questionText: `(${perturbInt(A, 1)} + ${perturbInt(B, 2)}) × ${perturbInt(C, 2)} - (${perturbInt(D, 1)} ÷ ${perturbInt(E, 2)}) ≈ ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `Brackets first: (${A} + ${B}) × ${C} - (${D} ÷ ${E})`,
+          `(${A + B} × ${C}) - ${q} = ${(A + B) * C} - ${q} = ${answer}`
+        ]
+      };
+    }
+
+    // Type 10: Multiple Operations (A ÷ B + C × D - E ÷ F ≈ ?)
+    function genType10(exam, diff) {
+      const B = randInt(8, 24), q1 = randInt(18, 55), A = B * q1;
+      const C = randInt(14, 42), D = randInt(4, 12);
+      const F = randInt(6, 16), q2 = randInt(8, 25), E = F * q2;
+
+      const answer = q1 + C * D - q2;
+      const { options, correctOptionIndex } = buildApproxOptions(answer, diff);
+      return {
+        questionId: `APP_T10_${diff}_${randInt(1000,9999)}`,
+        exam, topic: "Approximation", subType: "TYPE_10_MULTIPLE_OPERATIONS", difficulty: diff,
+        questionText: `${perturbInt(A, 1)} ÷ ${perturbInt(B, 1)} + ${perturbInt(C, 1)} × ${perturbInt(D, 2)} - ${perturbInt(E, 2)} ÷ ${perturbInt(F, 1)} ≈ ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `Round terms: (${A} ÷ ${B}) + (${C} × ${D}) - (${E} ÷ ${F})`,
+          `${q1} + ${C * D} - ${q2} = ${answer}`
+        ]
+      };
+    }
+
+    // Type 11: Power-Based Approximation (A² ÷ B + C² - D ≈ ?)
+    function genType11(exam, diff) {
+      const B = pickRandom([4, 5, 8, 10, 12, 15, 16, 20]);
+      const mult = randInt(2, 6);
+      const A = B * mult; // Guarantees A² is divisible by B!
+      const q = (A * A) / B;
+      const C = randInt(11, 28);
+      const D = randInt(25, 120);
+
+      const answer = q + C * C - D;
+      const { options, correctOptionIndex } = buildApproxOptions(answer, diff);
+      return {
+        questionId: `APP_T11_${diff}_${randInt(1000,9999)}`,
+        exam, topic: "Approximation", subType: "TYPE_11_POWER_APPROX", difficulty: diff,
+        questionText: `(${perturbInt(A, 1)})² ÷ ${perturbInt(B, 1)} + (${perturbInt(C, 2)})² - ${perturbInt(D, 2)} ≈ ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `Round bases: ${A}² ÷ ${B} + ${C}² - ${D}`,
+          `(${A * A} ÷ ${B}) + ${C * C} - ${D} = ${q} + ${C * C} - ${D} = ${answer}`
+        ]
+      };
+    }
+
+    // Type 12: Combined Root and Arithmetic (√A + ³√B × C + D² ≈ ?)
+    function genType12(exam, diff) {
+      const cfg = APPROX_PROFILES[diff];
+      const sqRoot = randInt(...cfg.sqRange);
+      const cbRoot = randInt(...cfg.cubeRange);
+      const C = randInt(4, 15);
+      const D = randInt(8, 22);
+
+      const radSq = perturbRadicand(sqRoot * sqRoot);
+      const radCb = perturbRadicand(cbRoot * cbRoot * cbRoot);
+      const answer = sqRoot + cbRoot * C + D * D;
+
+      const { options, correctOptionIndex } = buildApproxOptions(answer, diff);
+      return {
+        questionId: `APP_T12_${diff}_${randInt(1000,9999)}`,
+        exam, topic: "Approximation", subType: "TYPE_12_COMBINED_ROOT_ARITH", difficulty: diff,
+        questionText: `√${radSq} + ³√${radCb} × ${perturbInt(C, 1)} + (${perturbInt(D, 2)})² ≈ ?`,
+        options, correctOptionIndex, answer: String(answer),
+        solutionSteps: [
+          `Approximate roots & powers: √${radSq} ≈ ${sqRoot}, ³√${radCb} ≈ ${cbRoot}, (${D})² = ${D * D}`,
+          `${sqRoot} + (${cbRoot} × ${C}) + ${D * D} = ${sqRoot} + ${cbRoot * C} + ${D * D} = ${answer}`
+        ]
+      };
+    }
+
+    const TYPE_MAP = {
+      1: genType1, 2: genType2, 3: genType3, 4: genType4,
+      5: genType5, 6: genType6, 7: genType7, 8: genType8,
+      9: genType9, 10: genType10, 11: genType11, 12: genType12,
+    };
+
+    function resolveDiff(reqDiff) {
+      if (reqDiff && reqDiff !== "AUTO") return reqDiff;
+      const r = Math.random();
+      if (r < 0.25) return "EASY";
+      if (r < 0.75) return "MEDIUM";
+      return "HARD";
+    }
+
+    /* ================= 4. UI & 1,000-Q AUDIT ================= */
+    function renderQuestions() {
+      const exam = document.getElementById("examSelect").value;
+      const typeVal = document.getElementById("typeSelect").value;
+      const diffVal = document.getElementById("diffSelect").value;
+      const count = parseInt(document.getElementById("countInput").value, 10) || 6;
+      const allowedTypes = typeVal === "ALL" ? [1,2,3,4,5,6,7,8,9,10,11,12] : [Number(typeVal)];
+
+      const container = document.getElementById("questionsContainer");
+      container.innerHTML = "";
+
+      for (let i = 0; i < count; i++) {
+        const t = pickRandom(allowedTypes);
+        const d = resolveDiff(diffVal);
+        const q = TYPE_MAP[t](exam, d);
+
+        const card = document.createElement("div");
+        card.className = "question-card";
+        card.innerHTML = `
+          <div class="meta-row">
+            <span class="badge">${q.exam}</span>
+            <span class="badge">${q.subType}</span>
+            <span class="badge ${q.difficulty}">${q.difficulty}</span>
+          </div>
+          <div class="q-text">Q${i + 1}. ${q.questionText}</div>
+          <div class="options-grid">
+            ${q.options.map((opt, idx) => `
+              <button class="opt-btn" data-idx="${idx}" data-correct="${q.correctOptionIndex}">
+                (${String.fromCharCode(65 + idx)}) ${opt}
+              </button>
+            `).join("")}
+          </div>
+          <details>
+            <summary>View Step-by-Step Solution & JSON</summary>
+            <p><strong>Approximate Answer:</strong> ${q.answer}</p>
+            <ul>${q.solutionSteps.map(s => `<li>${s}</li>`).join("")}</ul>
+            <pre>${JSON.stringify(q, null, 2)}</pre>
+          </details>
+        `;
+
+        const btns = card.querySelectorAll(".opt-btn");
+        btns.forEach(btn => {
+          btn.addEventListener("click", () => {
+            const idx = Number(btn.dataset.idx);
+            const corr = Number(btn.dataset.correct);
+            btns.forEach((b, bIdx) => {
+              b.classList.remove("correct", "wrong");
+              if (bIdx === corr) b.classList.add("correct");
+              else if (bIdx === idx) b.classList.add("wrong");
+            });
+          });
+        });
+
+        container.appendChild(card);
+      }
+    }
+
+    function runAudit() {
+      const start = performance.now();
+      let errors = 0;
+      const diffs = ["EASY", "MEDIUM", "HARD"];
+      for (let i = 0; i < 1000; i++) {
+        const t = (i % 12) + 1;
+        const d = diffs[i % 3];
+        const q = TYPE_MAP[t]("IBPS_PO_PRELIMS", d);
+        const uniqueOpts = new Set(q.options);
+        const hasInvalid = q.options.some(o => !o || o.includes("NaN") || o.includes(".") || Number(o) <= 0);
+        if (q.options.length !== 5 || uniqueOpts.size !== 5 || q.options[q.correctOptionIndex] !== q.answer || hasInvalid) {
+          errors++;
+          console.error("Audit failure:", q);
+        }
+      }
+      const ms = (performance.now() - start).toFixed(1);
+      document.getElementById("auditOutput").innerHTML = `
+        <div class="audit-banner" style="border-left: 5px solid ${errors === 0 ? '#057a55' : '#e02424'}">
+          <strong>1,000-Question Approximation Audit Complete in ${ms} ms:</strong>
+          ${errors === 0
+            ? "✅ 1,000 / 1,000 Passed (All 12 Types across EASY/MEDIUM/HARD verified with 0 NaN, 0 duplicates, and drift-safe integer options)"
+            : `❌ ${errors} errors found`}
+        </div>
+      `;
+    }
+
+    document.getElementById("generateBtn").addEventListener("click", renderQuestions);
+    document.getElementById("auditBtn").addEventListener("click", runAudit);
+    renderQuestions();
+  </script>
+</body>
+</html>

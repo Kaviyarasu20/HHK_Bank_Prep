@@ -1,0 +1,495 @@
+/* =========================================================================
+ * HHK Current Affairs & Banking Awareness — Dedicated Stylesheet
+ * Responsive, accessible light-theme styling aligned with HHK design tokens
+ * ========================================================================= */
+
+/* Student Current Affairs Header & Filters */
+.ca-header-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.ca-header-bar .ca-filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.ca-filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.ca-search-input {
+  min-width: 210px;
+}
+
+/* Student Article Cards */
+.affair-card {
+  margin-bottom: 14px;
+  padding: 18px 20px;
+}
+
+.affair-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.affair-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.affair-card h2 {
+  font: 750 17px Manrope, sans-serif;
+  margin: 10px 0 8px;
+  color: #0f172a;
+  overflow-wrap: anywhere;
+}
+
+.affair-card p {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.affair-points {
+  margin: 10px 0;
+  padding-left: 20px;
+  color: #334155;
+  font-size: 13.8px;
+  line-height: 1.65;
+}
+
+.affair-points li {
+  margin-bottom: 4px;
+}
+
+.affair-static-gk {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f4f3ff;
+  border-left: 3px solid #6557dc;
+  font-size: 13.5px;
+  color: #1e293b;
+}
+
+.affair-source-link {
+  font-size: 12.5px;
+  margin-top: 10px;
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
+}
+
+.affair-question {
+  padding: 14px 0;
+  border-top: 1px solid #eeeef3;
+}
+
+.affair-question > strong {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* Status & Priority Badges */
+.ca-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.01em;
+}
+
+.ca-badge--published { background: #dcfce7; color: #166534; }
+.ca-badge--draft { background: #fef3c7; color: #92400e; }
+.ca-badge--archived { background: #e2e8f0; color: #334155; }
+.ca-badge--must_study { background: #fee2e2; color: #991b1b; }
+.ca-badge--important { background: #e0e7ff; color: #3730a3; }
+.ca-badge--additional { background: #f1f5f9; color: #475569; }
+.ca-badge--active { background: #dcfce7; color: #166534; }
+.ca-badge--inactive { background: #f1f5f9; color: #64748b; }
+
+/* Pagination Bar */
+.ca-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13.5px;
+  color: #475569;
+}
+
+.ca-pagination-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Loading, Error & Empty States */
+.ca-state-box {
+  padding: 24px 20px;
+  text-align: center;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 14px;
+  margin: 14px 0;
+}
+
+.ca-error-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 13.5px;
+  margin-bottom: 14px;
+}
+
+/* Admin Control Center */
+.ca-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.ca-stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 13px 14px;
+}
+
+.ca-stat-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.ca-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 4px;
+}
+
+.ca-subtabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.ca-admin-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+  align-items: end;
+}
+
+.ca-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ca-editor-grid .full-span {
+  grid-column: 1 / -1;
+}
+
+.affair-status {
+  height: 34px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  font-size: 13px;
+  padding: 0 10px;
+}
+
+.affair-body {
+  margin-top: 12px;
+}
+
+/* Admin Article List Cards */
+.ca-admin-article {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 15px 16px;
+  margin-bottom: 12px;
+  background: #ffffff;
+}
+
+.ca-admin-article-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ca-admin-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 12.5px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.ca-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Independent Per-Article MCQ Panel */
+.ca-mcq-panel {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.ca-mcq-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.ca-mcq-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.ca-option-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ca-option-key-btn {
+  min-width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ca-option-key-btn.is-correct {
+  background: #166534;
+  border-color: #166534;
+  color: #ffffff;
+}
+
+/* Category Table */
+.ca-cat-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.ca-cat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.ca-cat-table th,
+.ca-cat-table td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.ca-cat-table th {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+  .ca-stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .ca-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ca-editor-grid,
+  .ca-mcq-options-grid {
+    grid-template-columns: 1fr;
+  }
+  .ca-search-input {
+    min-width: 100%;
+  }
+}
+
+
+/* =========================================================================
+ * Phase 4: Banking Awareness Reference Hub Styles
+ * ========================================================================= */
+.ba-hub { width: 100%; }
+
+.ba-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.ba-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.ba-mini-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13.5px;
+}
+
+.ba-mini-row:last-child { border-bottom: none; }
+
+.ba-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.ba-freshness {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.ba-freshness--recently_verified { background: #dcfce7; color: #166534; }
+.ba-freshness--verification_due { background: #fef3c7; color: #92400e; }
+.ba-freshness--outdated { background: #fee2e2; color: #991b1b; }
+.ba-freshness--historical { background: #e2e8f0; color: #334155; }
+.ba-freshness--pending_verification { background: #e0e7ff; color: #3730a3; }
+
+.ba-az-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.ba-az-btn {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 7px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ba-az-btn.active {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
+}
+
+@media (max-width: 820px) {
+  .ba-overview-grid,
+  .ba-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Phase 8-10 Priority Badges, Stat Cards & Feedback Banners */
+.ca-badge-priority-must { background: #fee2e2; color: #991b1b; }
+.ca-badge-priority-important { background: #e0e7ff; color: #3730a3; }
+.ca-badge-priority-additional { background: #f1f5f9; color: #475569; }
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.stat-card strong {
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.info-banner {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  color: #3730a3;
+  font-size: 13.5px;
+}
+
+.error-banner {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 13.5px;
+}

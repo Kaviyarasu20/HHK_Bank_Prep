@@ -1,0 +1,216 @@
+/* =========================================================================
+ * Floor Arrangement Puzzle Generator (Reasoning)
+ * ========================================================================= */
+.form-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+}
+.gen-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  align-items: flex-end;
+}
+.gen-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5c5e73;
+}
+.gen-form select {
+  height: 34px;
+  border: 1px solid #e8e8ef;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  padding: 0 9px;
+}
+.req {
+  color: #dc2626;
+  margin-left: 2px;
+}
+.gen-btn {
+  height: 36px;
+  grid-column: 1 / -1;
+  justify-self: start;
+  width: fit-content;
+}
+.empty-state {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b6d84;
+}
+.puzzle-header {
+  font-size: 13px;
+  color: #5c5e73;
+  background: #f7f7fc;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+.clues-card,
+.questions-card,
+.answer-key-card {
+  margin-top: 12px;
+  border: 1px solid #e8e8ef;
+  border-radius: 8px;
+  background: #fff;
+}
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 16px;
+  border-bottom: 1px solid #eef0f5;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2c2e45;
+}
+.scenario {
+  padding: 10px 16px;
+  font-size: 13.5px;
+  color: #6b6d84;
+  margin: 0;
+}
+.clue-list {
+  margin: 0;
+  padding: 0 16px 14px;
+  color: #454761;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+.clue-list li {
+  margin-bottom: 7px;
+  list-style-position: inside;
+}
+.q-card {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f2f2f7;
+}
+.q-card:last-child {
+  border-bottom: 0;
+}
+.q-meta {
+  font-size: 14.5px;
+  color: #303247;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+.q-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.q-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 38px;
+  padding: 7px 11px;
+  border: 1px solid #e9e9f0;
+  border-radius: 6px;
+  background: #fff;
+  text-align: left;
+  color: #595b70;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.q-option:hover {
+  border-color: #c7c2f3;
+  background: #faf9ff;
+}
+.q-option.correct {
+  border-color: #367d60;
+  background: #eef9f3;
+  color: #367d60;
+}
+.q-option.wrong {
+  border-color: #a96843;
+  background: #fff3ee;
+  color: #a96843;
+}
+.opt-key {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  background: #f3f3f8;
+  font-weight: 700;
+  font-size: 12px;
+  color: #898a9d;
+}
+.q-option.correct > .opt-key {
+  background: #d7eee2;
+  color: #3c9a78;
+}
+.q-option.wrong > .opt-key {
+  background: #fbe5df;
+  color: #b45539;
+}
+.opt-text {
+  flex: 1;
+}
+.q-explanation {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #eef4ff;
+  border-radius: 5px;
+  font-size: 13px;
+  color: #5c5e73;
+}
+.q-explanation strong {
+  color: #4f45ae;
+}
+.answer-key-card {
+  margin-top: 14px;
+}
+.solution-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  padding: 10px 16px 14px;
+}
+.sol-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: #f7f7fc;
+  border: 1px solid #ececf3;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #454761;
+}
+.sol-detail {
+  margin-left: auto;
+  font-weight: 500;
+  color: #6b6d84;
+  font-size: 12.5px;
+}
+.export-row button {
+  height: 34px;
+  font-size: 13px;
+}
+.empty-state h2 {
+  margin: 4px 0 2px;
+  font-size: 18px;
+  color: #2c2e45;
+}
+.empty-state p {
+  margin: 2px 0;
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 560px;
+}
