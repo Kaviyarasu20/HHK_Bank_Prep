@@ -94,7 +94,12 @@ const createBatchSchema = z.object({
 
 caStudioAdminRouter.post("/batches", async (req, res) => {
   const input = createBatchSchema.parse(req.body ?? {});
-  const safeUrl = input.sourceUrl ? validateAndNormalizeSourceUrl(input.sourceUrl) : "";
+  let safeUrl = "";
+  if (input.sourceUrl) {
+    const check = validateAndNormalizeSourceUrl(input.sourceUrl);
+    if (!check.ok) return res.status(400).json({ error: check.error || "Invalid source URL." });
+    safeUrl = check.url;
+  }
   const eventDate = input.eventDate || new Date().toISOString().slice(0, 10);
 
   const client = await pool.connect();
@@ -261,12 +266,24 @@ caStudioAdminRouter.post("/batches/:id/analyze", aiJobLimiter, async (req, res) 
 caStudioAdminRouter.get("/events", async (req, res) => {
   const status = req.query.status && req.query.status !== "all" ? String(req.query.status) : null;
   const rows = await pool.query(
-    `SELECT e.*, c.name AS category_name
+    `SELECT e.*, c.name AS category_name,
+            COALESCE(qs.total_q, 0)::int AS generated_question_count,
+            COALESCE(qs.approved_q, 0)::int AS approved_question_count,
+            COALESCE(qs.pending_q, 0)::int AS pending_question_count
      FROM ca_events e
      LEFT JOIN ca_categories c ON c.id = e.category_id
+     LEFT JOIN (
+       SELECT event_id,
+              count(*)::int AS total_q,
+              count(*) FILTER (WHERE review_status = 'approved')::int AS approved_q,
+              count(*) FILTER (WHERE review_status = 'pending')::int AS pending_q
+       FROM ca_generated_questions
+       WHERE event_id IS NOT NULL
+       GROUP BY event_id
+     ) qs ON qs.event_id = e.id
      WHERE ($1::text IS NULL OR e.approval_status = $1)
-     ORDER BY e.event_date DESC, COALESCE(e.admin_override_score, e.relevance_score) DESC, e.created_at DESC
-     LIMIT 80`,
+     ORDER BY e.created_at DESC, e.event_date DESC, COALESCE(e.admin_override_score, e.relevance_score) DESC
+     LIMIT 120`,
     [status],
   );
   res.json({ success: true, events: rows.rows });
@@ -374,12 +391,26 @@ caStudioAdminRouter.post("/events/:id/generate-questions", aiJobLimiter, async (
       difficulty: z.enum(["easy", "moderate", "difficult"]).default("moderate"),
       count: z.coerce.number().int().min(1).max(10).default(3),
       targetExams: z.array(z.string()).default(["IBPS PO", "SBI PO", "RBI Grade B"]),
+      forceRegenerate: z.boolean().default(false),
     })
     .parse(req.body ?? {});
 
   const evRes = await pool.query("SELECT * FROM ca_events WHERE id = $1", [req.params.id]);
   if (!evRes.rowCount) return res.status(404).json({ error: "Current Affairs event not found." });
   const event = evRes.rows[0];
+
+  // Prevent accidental duplicate generation on a topic that already has questions
+  if (!input.forceRegenerate) {
+    const existingForEvent = await pool.query(
+      "SELECT count(*)::int AS cnt FROM ca_generated_questions WHERE event_id = $1",
+      [event.id],
+    );
+    if ((existingForEvent.rows[0]?.cnt || 0) > 0) {
+      return res.status(409).json({
+        error: `${existingForEvent.rows[0].cnt} question(s) already exist for this topic. View them in Question Review instead.`,
+      });
+    }
+  }
 
   const jobRes = await pool.query(
     `INSERT INTO ca_ai_processing_jobs (job_type, event_id, status, input_count, created_by)
@@ -407,7 +438,10 @@ caStudioAdminRouter.post("/events/:id/generate-questions", aiJobLimiter, async (
     try {
       await client.query("BEGIN");
       for (const q of aiOut.questions) {
-        if (q.duplicateStatus !== "unique") dupCount += 1;
+        if (q.duplicateStatus === "exact_duplicate" || q.duplicateStatus === "near_duplicate") {
+          dupCount += 1;
+          continue; // Skip duplicate questions instead of saving duplicates
+        }
         const saved = await insertQuestionWithOptions(client, q, {
           eventId: event.id,
           jobId,
@@ -435,7 +469,24 @@ caStudioAdminRouter.post("/events/:id/generate-questions", aiJobLimiter, async (
       [jobId, aiOut.provider, aiOut.model, savedQuestions.length, dupCount, JSON.stringify(aiOut.usage || {})],
     );
 
-    res.status(201).json({ success: true, jobId, questions: savedQuestions });
+    let autoArchivedDuplicate = false;
+    if (savedQuestions.length === 0 && dupCount > 0) {
+      await pool.query(
+        `UPDATE ca_events
+         SET duplicate_status = 'duplicate', approval_status = 'archived', updated_at = now()
+         WHERE id = $1`,
+        [event.id],
+      );
+      autoArchivedDuplicate = true;
+    }
+
+    res.status(201).json({
+      success: true,
+      jobId,
+      questions: savedQuestions,
+      skippedDuplicates: dupCount,
+      autoArchivedDuplicate,
+    });
   } catch (err) {
     await pool.query(
       `UPDATE ca_ai_processing_jobs SET status = 'failed', error_message = $2, completed_at = now() WHERE id = $1`,
@@ -507,11 +558,24 @@ caStudioAdminRouter.get("/questions", async (req, res) => {
   const difficulty = req.query.difficulty && req.query.difficulty !== "all" ? String(req.query.difficulty) : null;
   const questionType = req.query.questionType && req.query.questionType !== "all" ? String(req.query.questionType) : null;
   const categoryId = req.query.categoryId && isValidUuid(String(req.query.categoryId)) ? String(req.query.categoryId) : null;
+  const eventId = req.query.eventId && isValidUuid(String(req.query.eventId)) ? String(req.query.eventId) : null;
   const search = req.query.search ? `%${String(req.query.search).trim()}%` : null;
-  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 40));
+  const limit = Math.min(150, Math.max(1, Number(req.query.limit) || 80));
 
   const rows = await pool.query(
-    `SELECT q.*, c.name AS category_name,
+    `SELECT q.*, c.name AS category_name, e.main_event AS event_title,
+            COALESCE((
+              SELECT jsonb_agg(psq.practice_set_id)
+              FROM ca_practice_set_questions psq
+              JOIN ca_practice_sets ps ON ps.id = psq.practice_set_id
+              WHERE psq.question_id = q.id AND ps.publication_status <> 'archived'
+            ), '[]'::jsonb) AS used_in_set_ids,
+            COALESCE((
+              SELECT jsonb_agg(ps.title)
+              FROM ca_practice_set_questions psq
+              JOIN ca_practice_sets ps ON ps.id = psq.practice_set_id
+              WHERE psq.question_id = q.id AND ps.publication_status <> 'archived'
+            ), '[]'::jsonb) AS used_in_set_titles,
             COALESCE((
               SELECT jsonb_agg(jsonb_build_object(
                 'option_label', o.option_label, 'option_text', o.option_text, 'is_correct', o.is_correct
@@ -520,14 +584,16 @@ caStudioAdminRouter.get("/questions", async (req, res) => {
             ), '[]'::jsonb) AS options
      FROM ca_generated_questions q
      LEFT JOIN ca_categories c ON c.id = q.category_id
+     LEFT JOIN ca_events e ON e.id = q.event_id
      WHERE ($1::text IS NULL OR q.review_status = $1)
        AND ($2::text IS NULL OR q.difficulty = $2)
        AND ($3::text IS NULL OR q.question_type = $3)
        AND ($4::uuid IS NULL OR q.category_id = $4)
-       AND ($5::text IS NULL OR q.question_text ILIKE $5 OR q.source_reference ILIKE $5)
-     ORDER BY q.ca_date DESC, q.created_at DESC
-     LIMIT $6`,
-    [reviewStatus, difficulty, questionType, categoryId, search, limit],
+       AND ($5::uuid IS NULL OR q.event_id = $5)
+       AND ($6::text IS NULL OR q.question_text ILIKE $6 OR q.source_reference ILIKE $6 OR e.main_event ILIKE $6)
+     ORDER BY q.created_at DESC, q.ca_date DESC
+     LIMIT $7`,
+    [reviewStatus, difficulty, questionType, categoryId, eventId, search, limit],
   );
   res.json({ success: true, questions: rows.rows });
 });
@@ -604,6 +670,7 @@ caStudioAdminRouter.post("/questions/:id/review", async (req, res) => {
   const upd = await pool.query(
     `UPDATE ca_generated_questions
      SET review_status = $2,
+         uncertain_flag = CASE WHEN $2 = 'approved' THEN FALSE ELSE uncertain_flag END,
          approved_by = CASE WHEN $2 = 'approved' THEN $3 ELSE approved_by END,
          approved_at = CASE WHEN $2 = 'approved' THEN now() ELSE approved_at END,
          updated_at = now()
@@ -671,21 +738,45 @@ caStudioAdminRouter.post("/practice-sets", async (req, res) => {
 
     let selectedQuestionIds = [];
     if (input.questionIds?.length) {
+      const isRevisionMix = input.setType === "weekly" || input.setType === "monthly";
       const validQ = await client.query(
-        `SELECT id FROM ca_generated_questions
-         WHERE id = ANY($1::uuid[]) AND review_status = 'approved'`,
-        [input.questionIds],
+        `SELECT q.id FROM ca_generated_questions q
+         WHERE q.id = ANY($1::uuid[])
+           AND q.review_status = 'approved'
+           AND (
+             $2::boolean = TRUE
+             OR NOT EXISTS (
+               SELECT 1 FROM ca_practice_set_questions psq
+               JOIN ca_practice_sets ps ON ps.id = psq.practice_set_id
+               WHERE psq.question_id = q.id AND ps.publication_status <> 'archived'
+             )
+           )`,
+        [input.questionIds, isRevisionMix],
       );
       selectedQuestionIds = validQ.rows.map((r) => r.id);
+      if (!selectedQuestionIds.length) {
+        await client.query("ROLLBACK");
+        return res.status(409).json({
+          error: "Selected question(s) are already used in another active practice set.",
+        });
+      }
     } else {
       const qRows = await client.query(
-        `SELECT id, difficulty
-         FROM ca_generated_questions
-         WHERE review_status = 'approved'
-           AND ca_date >= $1::date AND ca_date <= $2::date
-           AND (cardinality($3::uuid[]) = 0 OR category_id = ANY($3::uuid[]))
-           AND (cardinality($4::text[]) = 0 OR question_type = ANY($4::text[]))
-         ORDER BY ca_date DESC, created_at DESC
+        `SELECT q.id, q.difficulty
+         FROM ca_generated_questions q
+         WHERE q.review_status = 'approved'
+           AND q.ca_date >= $1::date AND q.ca_date <= $2::date
+           AND (cardinality($3::uuid[]) = 0 OR q.category_id = ANY($3::uuid[]))
+           AND (cardinality($4::text[]) = 0 OR q.question_type = ANY($4::text[]))
+           AND (
+             $6 IN ('weekly', 'monthly')
+             OR NOT EXISTS (
+               SELECT 1 FROM ca_practice_set_questions psq
+               JOIN ca_practice_sets ps ON ps.id = psq.practice_set_id
+               WHERE psq.question_id = q.id AND ps.publication_status <> 'archived'
+             )
+           )
+         ORDER BY q.ca_date DESC, q.created_at DESC
          LIMIT $5`,
         [
           input.dateFrom,
@@ -693,6 +784,7 @@ caStudioAdminRouter.post("/practice-sets", async (req, res) => {
           input.categoryIds,
           input.questionFormats,
           Math.max(input.questionCount * 2, 100),
+          input.setType,
         ],
       );
       // Allocate according to requested difficulty distribution
@@ -810,6 +902,95 @@ caStudioAdminRouter.patch("/practice-sets/:id/status", async (req, res) => {
   );
   if (!upd.rowCount) return res.status(404).json({ error: "Practice set not found." });
   res.json({ success: true, practiceSet: upd.rows[0] });
+});
+
+caStudioAdminRouter.get("/practice-sets/:id/questions", async (req, res) => {
+  if (!isValidUuid(req.params.id)) return res.status(400).json({ error: "Invalid practice set ID." });
+  const psRes = await pool.query("SELECT * FROM ca_practice_sets WHERE id = $1", [req.params.id]);
+  if (!psRes.rowCount) return res.status(404).json({ error: "Practice set not found." });
+
+  const qRes = await pool.query(
+    `SELECT q.*, c.name AS category_name, e.main_event AS event_title, psq.sort_order, psq.marks,
+            COALESCE((
+              SELECT jsonb_agg(jsonb_build_object(
+                'option_label', o.option_label, 'option_text', o.option_text, 'is_correct', o.is_correct
+              ) ORDER BY o.sort_order ASC)
+              FROM ca_question_options o WHERE o.question_id = q.id
+            ), '[]'::jsonb) AS options
+     FROM ca_practice_set_questions psq
+     JOIN ca_generated_questions q ON q.id = psq.question_id
+     LEFT JOIN ca_categories c ON c.id = q.category_id
+     LEFT JOIN ca_events e ON e.id = q.event_id
+     WHERE psq.practice_set_id = $1
+     ORDER BY psq.sort_order ASC`,
+    [req.params.id],
+  );
+  res.json({ success: true, practiceSet: psRes.rows[0], questions: qRes.rows });
+});
+
+caStudioAdminRouter.put("/practice-sets/:id/questions", async (req, res) => {
+  if (!isValidUuid(req.params.id)) return res.status(400).json({ error: "Invalid practice set ID." });
+  const { questionIds } = z
+    .object({ questionIds: z.array(z.string().uuid()).min(1).max(150) })
+    .parse(req.body ?? {});
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const psRes = await client.query("SELECT * FROM ca_practice_sets WHERE id = $1 FOR UPDATE", [req.params.id]);
+    if (!psRes.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Practice set not found." });
+    }
+    const ps = psRes.rows[0];
+    const isRevisionMix = ps.set_type === "weekly" || ps.set_type === "monthly";
+    const validRes = await client.query(
+      `SELECT q.id FROM ca_generated_questions q
+       WHERE q.id = ANY($1::uuid[])
+         AND q.review_status = 'approved'
+         AND (
+           $3::boolean = TRUE
+           OR NOT EXISTS (
+             SELECT 1 FROM ca_practice_set_questions psq
+             JOIN ca_practice_sets other_ps ON other_ps.id = psq.practice_set_id
+             WHERE psq.question_id = q.id
+               AND psq.practice_set_id <> $2
+               AND other_ps.publication_status <> 'archived'
+           )
+         )`,
+      [questionIds, ps.id, isRevisionMix],
+    );
+    const validSet = new Set(validRes.rows.map((r) => r.id));
+    const orderedIds = [...new Set(questionIds)].filter((id) => validSet.has(id));
+    if (!orderedIds.length) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Select at least one approved question." });
+    }
+
+    await client.query("DELETE FROM ca_practice_set_questions WHERE practice_set_id = $1", [ps.id]);
+    const marks = Number(ps.marks_per_question) || 1;
+    for (let i = 0; i < orderedIds.length; i += 1) {
+      await client.query(
+        `INSERT INTO ca_practice_set_questions (practice_set_id, question_id, sort_order, marks)
+         VALUES ($1,$2,$3,$4)`,
+        [ps.id, orderedIds[i], i + 1, marks],
+      );
+    }
+    const totalMarks = Number((orderedIds.length * marks).toFixed(2));
+    const upd = await client.query(
+      `UPDATE ca_practice_sets
+       SET total_questions = $2, total_marks = $3, updated_at = now()
+       WHERE id = $1 RETURNING *`,
+      [ps.id, orderedIds.length, totalMarks],
+    );
+    await client.query("COMMIT");
+    res.json({ success: true, practiceSet: upd.rows[0], questionCount: orderedIds.length });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 });
 
 caStudioAdminRouter.delete("/practice-sets/:id", async (req, res) => {
@@ -941,13 +1122,25 @@ caStudioAdminRouter.post("/sources", async (req, res) => {
     })
     .parse(req.body ?? {});
 
-  const safeUrl = input.feedUrl ? validateAndNormalizeSourceUrl(input.feedUrl) : "";
+  let safeUrl = "";
+  if (input.feedUrl) {
+    const check = validateAndNormalizeSourceUrl(input.feedUrl);
+    if (!check.ok) return res.status(400).json({ error: check.error || "Invalid feed URL." });
+    safeUrl = check.url;
+  }
   const ins = await pool.query(
     `INSERT INTO ca_sources (name, source_type, feed_url, trust_level, created_by)
      VALUES ($1,$2,$3,$4,$5) RETURNING *`,
     [input.name, input.sourceType, safeUrl, input.trustLevel, req.session.userId],
   );
   res.status(201).json({ success: true, source: ins.rows[0] });
+});
+
+caStudioAdminRouter.delete("/sources/:id", async (req, res) => {
+  if (!isValidUuid(req.params.id)) return res.status(400).json({ error: "Invalid source ID." });
+  const del = await pool.query("DELETE FROM ca_sources WHERE id = $1 RETURNING id", [req.params.id]);
+  if (!del.rowCount) return res.status(404).json({ error: "Source not found." });
+  res.json({ success: true, deletedId: req.params.id });
 });
 
 caStudioAdminRouter.put("/automation-config", async (req, res) => {
@@ -980,9 +1173,10 @@ caStudioAdminRouter.put("/automation-config", async (req, res) => {
 });
 
 caStudioAdminRouter.post("/automation/run-fetch", aiJobLimiter, async (req, res) => {
-  const sourcesRes = await pool.query(
-    "SELECT * FROM ca_sources WHERE is_active = TRUE AND feed_url <> '' ORDER BY created_at ASC LIMIT 5",
-  );
+  const sourceId = req.body?.sourceId && isValidUuid(String(req.body.sourceId)) ? String(req.body.sourceId) : null;
+  const sourcesRes = sourceId
+    ? await pool.query("SELECT * FROM ca_sources WHERE id = $1 AND feed_url <> ''", [sourceId])
+    : await pool.query("SELECT * FROM ca_sources WHERE is_active = TRUE AND feed_url <> '' ORDER BY created_at ASC LIMIT 8");
   if (!sourcesRes.rowCount) {
     return res.status(400).json({ error: "No active RSS/API sources with URLs are configured." });
   }

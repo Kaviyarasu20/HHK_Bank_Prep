@@ -305,7 +305,7 @@ export function validateAiQuestionPayload({ question, sourceText = "" }) {
 
   // Numeric grounding check on correct option (skip combo options like "Only 1 and 2")
   if (correctOpt && sourceText) {
-    const isCombo = /^(only|both|all|neither|1\s*[-–]|a-\d|\d+\s+pair)/i.test(correctOpt.option_text);
+    const isCombo = /^(only|both|all|neither|none|1\s*[-–,]|\d+\s*(,|and|&)\s*\d+|a-\d|\d+\s+pair)/i.test(correctOpt.option_text);
     if (!isCombo) {
       const nums = correctOpt.option_text.match(/\d+(?:[.,]\d+)*/g) || [];
       for (const n of nums) {

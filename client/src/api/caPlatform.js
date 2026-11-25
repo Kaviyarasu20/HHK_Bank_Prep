@@ -32,8 +32,10 @@ async function downloadPdfEndpoint(url, fallbackName) {
   a.download = fileName;
   document.body.appendChild(a);
   a.click();
-  a.remove();
-  URL.revokeObjectURL(objUrl);
+  setTimeout(() => {
+    a.remove();
+    URL.revokeObjectURL(objUrl);
+  }, 5000);
   return { fileName, sizeBytes: blob.size };
 }
 
@@ -71,6 +73,12 @@ export const caStudioAdminApi = {
       method: "PATCH",
       body: JSON.stringify({ publicationStatus }),
     }),
+  getPracticeSetQuestions: (id) => api(`/admin/ca-studio/practice-sets/${id}/questions`),
+  updatePracticeSetQuestions: (id, questionIds) =>
+    api(`/admin/ca-studio/practice-sets/${id}/questions`, {
+      method: "PUT",
+      body: JSON.stringify({ questionIds }),
+    }),
   deletePracticeSet: (id) => api(`/admin/ca-studio/practice-sets/${id}`, { method: "DELETE" }),
   downloadAdminPdf: (setId, format) =>
     downloadPdfEndpoint(`/api/admin/ca-studio/practice-sets/${setId}/pdf/${format}`, `hhk-${format}.pdf`),
@@ -80,8 +88,12 @@ export const caStudioAdminApi = {
     api("/admin/ca-studio/sources", { method: "POST", body: JSON.stringify(payload) }),
   updateAutomationConfig: (payload) =>
     api("/admin/ca-studio/automation-config", { method: "PUT", body: JSON.stringify(payload) }),
-  runAutomationFetch: () =>
-    api("/admin/ca-studio/automation/run-fetch", { method: "POST" }),
+  deleteSource: (id) => api(`/admin/ca-studio/sources/${id}`, { method: "DELETE" }),
+  runAutomationFetch: (sourceId) =>
+    api("/admin/ca-studio/automation/run-fetch", {
+      method: "POST",
+      body: JSON.stringify(sourceId ? { sourceId } : {}),
+    }),
 };
 
 export const caPracticeStudentApi = {
