@@ -13,6 +13,49 @@ import {
 } from '../services/questionBankSync.js';
 import { BANKING_SYLLABUS } from '../../shared/bankingSyllabus.js';
 import { generateTopicQuestions, SUPPORTED_AUTO_TOPICS, isTopicAutoGeneratable } from '../services/questionGenerator.js';
+import { generateRcPassageAndQuestionsWithAi, RC_ALL_CATEGORIES, RC_SUBJECT_CATEGORIES } from '../services/rcAiEngineService.js';
+const isReadingComprehensionTopic = (topicName) => String(topicName || '').trim().toLowerCase() === 'reading comprehension';
+const isTopicAutoGeneratableAll = (topicName) => isTopicAutoGeneratable(topicName) || isReadingComprehensionTopic(topicName);
+
+async function assertCompleteRcPassageSets(client, selectedQuestionIds) {
+  if (!Array.isArray(selectedQuestionIds) || !selectedQuestionIds.length) return;
+  const rcGroupsRes = await client.query(
+    `SELECT q.passage_group_id,
+            COALESCE(pg.title, 'Reading Comprehension Passage') AS passage_title,
+            COUNT(*)::int AS selected_count
+     FROM questions q
+     LEFT JOIN passage_groups pg ON pg.id = q.passage_group_id
+     WHERE q.id = ANY($1::uuid[])
+       AND LOWER(q.topic_name) = 'reading comprehension'
+       AND q.passage_group_id IS NOT NULL
+     GROUP BY q.passage_group_id, pg.title`,
+    [selectedQuestionIds]
+  );
+  if (!rcGroupsRes.rowCount) return;
+
+  const groupIds = rcGroupsRes.rows.map((r) => r.passage_group_id);
+  const fullCountsRes = await client.query(
+    `SELECT passage_group_id, COUNT(*)::int AS total_count
+     FROM questions
+     WHERE passage_group_id = ANY($1::uuid[])
+       AND status = 'published'
+     GROUP BY passage_group_id`,
+    [groupIds]
+  );
+  const fullCountMap = new Map(fullCountsRes.rows.map((r) => [r.passage_group_id, Number(r.total_count)]));
+
+  for (const row of rcGroupsRes.rows) {
+    const total = fullCountMap.get(row.passage_group_id) ?? row.selected_count;
+    if (Number(row.selected_count) !== total) {
+      throw Object.assign(
+        new Error(
+          `Reading Comprehension passage sets cannot be split. Select all ${total} questions of "${row.passage_title}" together as one complete set (currently ${row.selected_count}/${total} selected).`
+        ),
+        { status: 400 }
+      );
+    }
+  }
+}
 import {
   findSyllabusSubject,
   getExamWiseBlueprintProgress,
@@ -197,6 +240,7 @@ async function resolveMockTestQuestions(client, input, existingTestId) {
         );
       }
     }
+    await assertCompleteRcPassageSets(client, selected.rows.map((r) => r.id));
     return selected.rows;
   }
   const priorRows = await client.query(
@@ -1029,6 +1073,10 @@ adminRouter.post("/topics", async (req, res) => {
 adminRouter.get("/questions", async (req, res) => {
   const subjectParam = req.query.subject ? String(req.query.subject).trim() : null;
   const topicParam = req.query.topic ? String(req.query.topic).trim() : null;
+  const subtopicParam = req.query.subtopic ? String(req.query.subtopic).trim() : null;
+  const difficultyParam = req.query.difficulty ? String(req.query.difficulty).trim().toLowerCase() : null;
+  const stageIdParam = req.query.stageId ? String(req.query.stageId).trim() : null;
+  const rowLimit = stageIdParam ? 2000 : 500;
   const subjectObj = subjectParam ? findSyllabusSubject(subjectParam) : null;
   const subjectPatterns = subjectParam
     ? (subjectObj?.matchKeywords?.length ? subjectObj.matchKeywords : [subjectParam]).map(
@@ -1040,7 +1088,26 @@ adminRouter.get("/questions", async (req, res) => {
     `SELECT
        q.*, pg.title passage_title, pg.passage_text,
        pg.language passage_language, pg.image_url passage_image_url,
-       s.name section_name, e.name exam_name, st.name stage_name
+       s.name section_name, e.name exam_name, st.name stage_name,
+       st.id stage_id,
+       COALESCE(
+         (
+           SELECT json_agg(
+             json_build_object(
+               'id', mt.id,
+               'name', mt.name,
+               'set_label', COALESCE(mt.set_label, 'Set ' || COALESCE(mt.set_number, 1)),
+               'status', mt.status
+             )
+             ORDER BY mt.set_number ASC, mt.created_at ASC
+           )
+           FROM mock_test_questions mtq
+           JOIN mock_tests mt ON mt.id = mtq.mock_test_id
+           WHERE mtq.question_id = q.id
+             AND mt.status <> 'archived'
+         ),
+         '[]'::json
+       ) AS used_in_sets
      FROM questions q
      LEFT JOIN passage_groups pg ON pg.id = q.passage_group_id
      JOIN exam_sections s ON s.id = q.section_id
@@ -1048,6 +1115,9 @@ adminRouter.get("/questions", async (req, res) => {
      JOIN exams e ON e.id = st.exam_id
      WHERE ($1::uuid IS NULL OR q.section_id = $1)
        AND ($2::text IS NULL OR q.status = $2)
+       AND ($6::uuid IS NULL OR st.id = $6)
+       AND ($7::text IS NULL OR LOWER(COALESCE(q.subtopic_name, '')) = LOWER($7))
+       AND ($8::text IS NULL OR LOWER(q.difficulty) = $8)
        AND (
          $4::text IS NULL
          OR LOWER(q.topic_name) = LOWER($4)
@@ -1067,14 +1137,18 @@ adminRouter.get("/questions", async (req, res) => {
          q.question_text ILIKE $3 OR
          pg.passage_text ILIKE $3
        )
-     ORDER BY q.created_at DESC
-     LIMIT 500`,
+     ORDER BY s.sort_order ASC, q.topic_name ASC, q.subtopic_name ASC, q.created_at DESC
+     LIMIT $9`,
     [
       req.query.sectionId ?? null,
       req.query.status ?? null,
       req.query.search ? `%${req.query.search}%` : null,
       topicParam,
-      subjectPatterns
+      subjectPatterns,
+      stageIdParam,
+      subtopicParam,
+      difficultyParam,
+      rowLimit
     ]
   );
   res.json({ questions: rows.rows });
@@ -1094,7 +1168,13 @@ const generateQuestionsSchema = z.object({
 });
 
 adminRouter.get("/questions/generate/topics", (_req, res) => {
-  res.json({ supportedTopics: SUPPORTED_AUTO_TOPICS });
+  res.json({
+    supportedTopics: {
+      ...SUPPORTED_AUTO_TOPICS,
+      english: ["Reading Comprehension"],
+    },
+    rcCategories: RC_ALL_CATEGORIES,
+  });
 });
 
 adminRouter.post("/questions/generate", async (req, res) => {
@@ -2030,7 +2110,7 @@ async function handleGetNextSet(req, res) {
     return res.json({
       ...info,
       suggestedName: `${topic} - ${info.suggestedSetLabel}`,
-      autoGeneratorSupported: isTopicAutoGeneratable(topic),
+      autoGeneratorSupported: isTopicAutoGeneratableAll(topic),
     });
   }
   const examId = String(req.query.examId || "").trim();
@@ -2072,6 +2152,8 @@ async function handleListTests(req, res) {
        (SELECT count(*) FROM mock_test_questions mtq
         JOIN questions q ON q.id = mtq.question_id
         WHERE mtq.mock_test_id = t.id AND q.status = 'published')::int published_question_count,
+       (SELECT count(*) FROM test_attempts ta
+        WHERE ta.mock_test_id = t.id)::int attempt_count,
        ARRAY(
          SELECT question_id
          FROM mock_test_questions
@@ -2108,7 +2190,7 @@ async function handleListTests(req, res) {
       return {
         ...t,
         blueprint_progress: null,
-        auto_generator_supported: isTopicAutoGeneratable(t.topic),
+        auto_generator_supported: isTopicAutoGeneratableAll(t.topic),
         ready_to_publish: target > 0 && publishedCount === target,
       };
     })
@@ -2356,6 +2438,104 @@ adminRouter.put("/tests/:id", async (req, res) => {
   }
 });
 
+// Complete Delete for Mock Test Set (EXAM_WISE or TOPIC_WISE)
+async function handleDeleteMockTest(req, res) {
+  const force = String(req.query.force || "").toLowerCase() === "true";
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const existing = await client.query(
+      `SELECT id, name, test_type, set_number, set_label, status, exam_id, stage_id
+       FROM mock_tests
+       WHERE id = $1
+       FOR UPDATE`,
+      [req.params.id]
+    );
+    if (!existing.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Mock test not found." });
+    }
+    const testRow = existing.rows[0];
+
+    // Protect financial records: payment_orders references mock_tests with ON DELETE RESTRICT
+    const ordersRes = await client.query(
+      "SELECT count(*)::int AS cnt FROM payment_orders WHERE mock_test_id = $1",
+      [req.params.id]
+    );
+    const orderCount = Number(ordersRes.rows[0]?.cnt || 0);
+    if (orderCount > 0) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        error: `Cannot permanently delete "${testRow.name}" because ${orderCount} payment order record(s) reference it. Unpublish or archive it instead to preserve payment history.`,
+        orderCount,
+      });
+    }
+
+    // Check student test_attempts (ON DELETE RESTRICT)
+    const attemptsRes = await client.query(
+      "SELECT count(*)::int AS cnt FROM test_attempts WHERE mock_test_id = $1",
+      [req.params.id]
+    );
+    const attemptCount = Number(attemptsRes.rows[0]?.cnt || 0);
+    if (attemptCount > 0 && !force) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        error: `"${testRow.name}" has ${attemptCount} student attempt(s). Confirm force deletion to permanently remove this test set and its attempt records.`,
+        attemptCount,
+        requiresForce: true,
+      });
+    }
+
+    if (attemptCount > 0 && force) {
+      await client.query(
+        "DELETE FROM test_attempts WHERE mock_test_id = $1",
+        [req.params.id]
+      );
+    }
+
+    // Deleting mock_tests cascades to mock_test_questions, leaderboard_entries,
+    // subscription_plan_tests, user_test_entitlements, and ga_marathon_* tables.
+    // Original questions in the Question Bank remain completely untouched.
+    await client.query("DELETE FROM mock_tests WHERE id = $1", [req.params.id]);
+
+    await client.query(
+      `INSERT INTO audit_logs
+        (actor_id, action, entity_type, entity_id, details, ip_address)
+       VALUES ($1, 'mock_test.delete', 'mock_test', $2, $3, $4)`,
+      [
+        req.session.userId,
+        testRow.id,
+        JSON.stringify({
+          name: testRow.name,
+          testType: testRow.test_type,
+          setNumber: testRow.set_number,
+          setLabel: testRow.set_label,
+          previousStatus: testRow.status,
+          deletedAttempts: attemptCount,
+          force,
+        }),
+        req.ip,
+      ]
+    );
+
+    await client.query("COMMIT");
+    res.json({
+      deleted: true,
+      id: testRow.id,
+      name: testRow.name,
+      deletedAttempts: attemptCount,
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+adminRouter.delete("/tests/:id", handleDeleteMockTest);
+adminRouter.delete("/mock-tests/:id", handleDeleteMockTest);
+
 // Create TOPIC_WISE Mock Test Set (with strict single-topic validation)
 adminRouter.post("/mock-tests/topicwise", async (req, res) => {
   const input = validate(topicwiseTestSchema, req.body);
@@ -2403,6 +2583,7 @@ adminRouter.post("/mock-tests/topicwise", async (req, res) => {
           error: `Strict topic filter violation: ${offTopic.length} selected question(s) do not belong to "${input.topic}".`,
         });
       }
+      await assertCompleteRcPassageSets(client, qRes.rows.map((r) => r.id));
       validatedQuestions = qRes.rows;
     }
 
@@ -2537,6 +2718,7 @@ adminRouter.put("/mock-tests/topicwise/:id", async (req, res) => {
           error: `Strict topic filter violation: ${offTopic.length} selected question(s) do not belong to "${input.topic}".`,
         });
       }
+      await assertCompleteRcPassageSets(client, qRes.rows.map((r) => r.id));
       validatedQuestions = qRes.rows;
     }
 
@@ -2621,7 +2803,7 @@ adminRouter.post("/mock-tests/:id/generate-topic-questions", async (req, res) =>
   if (test.status !== "draft" && !input.previewOnly) {
     return res.status(409).json({ error: "Unpublish this Topicwise Test to draft before generating new questions." });
   }
-  if (!isTopicAutoGeneratable(test.topic)) {
+  if (!isTopicAutoGeneratableAll(test.topic)) {
     return res.status(400).json({
       error: `Auto-generation is not yet available for "${test.topic}". Pick questions manually from the Question Bank.`,
     });
@@ -2656,17 +2838,80 @@ adminRouter.post("/mock-tests/:id/generate-topic-questions", async (req, res) =>
   );
   const usedTexts = new Set(priorTextsRes.rows.map((r) => r.norm_text));
 
-  // Generate with a small buffer so we can filter out any collisions with earlier sets
-  const bufferCount = Math.min(100, needed + Math.min(15, Math.ceil(needed * 0.4)));
-  const generated = generateTopicQuestions({
-    examCode: input.examCode,
-    stageName: input.stageName,
-    topicName: test.topic,
-    subtopicName: input.subtopicName,
-    difficulty: input.difficulty === "auto" ? "medium" : input.difficulty,
-    count: bufferCount,
-    optionCount: 5,
-  });
+  let generated;
+  if (isReadingComprehensionTopic(test.topic)) {
+    const requestedRcCategory = String(req.body?.rcCategory || "").trim();
+    const passageLength = ["short", "medium", "long"].includes(String(req.body?.passageLength || "").toLowerCase())
+      ? String(req.body.passageLength).toLowerCase()
+      : "medium";
+    const dbDifficulty = input.difficulty === "auto" ? "medium" : input.difficulty;
+    const rcDifficulty = dbDifficulty === "medium" ? "moderate" : dbDifficulty;
+
+    // Enforce atomic 5-question passage sets for Reading Comprehension (1 passage + 5 questions = 1 set)
+    const RC_SET_SIZE = 5;
+    if (needed < RC_SET_SIZE || needed % RC_SET_SIZE !== 0) {
+      return res.status(400).json({
+        error: `Reading Comprehension must be generated in complete 5-question passage sets (5, 10, 15, 20, 25, or 30 questions). Requested: ${needed}.`,
+      });
+    }
+    const passageCount = needed / RC_SET_SIZE;
+    const basePerPassage = RC_SET_SIZE;
+    const remainder = 0;
+    const passageSets = [];
+    const generatedTitles = [];
+
+    for (let pIdx = 0; pIdx < passageCount; pIdx += 1) {
+      const qForThisPassage = basePerPassage + (pIdx < remainder ? 1 : 0);
+      const chosenCategory =
+        requestedRcCategory && RC_ALL_CATEGORIES.includes(requestedRcCategory)
+          ? requestedRcCategory
+          : RC_SUBJECT_CATEGORIES[pIdx % RC_SUBJECT_CATEGORIES.length];
+
+      const combined = await generateRcPassageAndQuestionsWithAi({
+        examination: input.examCode || "IBPS PO",
+        category: chosenCategory,
+        difficulty: rcDifficulty,
+        passageLength,
+        questionsPerPassage: qForThisPassage,
+        questionTypes: [],
+        optionCount: 5,
+        includeExplanations: true,
+        includeVocabulary: false,
+        avoidTitles: generatedTitles,
+      });
+      generatedTitles.push(combined.passage.title);
+
+      passageSets.push({
+        passage: {
+          title: combined.passage.title,
+          passageText: combined.passage.passage_text,
+        },
+        questions: combined.questions.map((q) => ({
+          questionText: q.question_text,
+          subtopicName: q.question_type || chosenCategory,
+          difficulty: dbDifficulty,
+          options: q.options,
+          correctAnswer: q.correct_answer,
+          explanation: q.passage_reference
+            ? `${q.explanation} (Passage Reference: "${q.passage_reference}")`
+            : q.explanation,
+        })),
+      });
+    }
+    generated = { mode: "passage_sets", passageSets };
+  } else {
+    // Generate with a small buffer so we can filter out any collisions with earlier sets
+    const bufferCount = Math.min(100, needed + Math.min(15, Math.ceil(needed * 0.4)));
+    generated = generateTopicQuestions({
+      examCode: input.examCode,
+      stageName: input.stageName,
+      topicName: test.topic,
+      subtopicName: input.subtopicName,
+      difficulty: input.difficulty === "auto" ? "medium" : input.difficulty,
+      count: bufferCount,
+      optionCount: 5,
+    });
+  }
 
   const deduplicatedStandalone = [];
   if (generated.mode === "standalone") {

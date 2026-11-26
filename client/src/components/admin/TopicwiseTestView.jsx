@@ -11,6 +11,7 @@ import {
   Plus,
   RefreshCw,
   Sparkles,
+  Trash2,
   X,
 } from "lucide-react";
 import { BANKING_SYLLABUS } from "../../shared/bankingSyllabus";
@@ -46,6 +47,7 @@ function TopicwiseTestView({
   onRefreshTests,
   onPublishToggle,
   onDuplicateSet,
+  onDeleteSet,
   onToast,
   onError,
   api,
@@ -87,6 +89,7 @@ function TopicwiseTestView({
     () => [
       ...(supportedTopics.quant ?? []),
       ...(supportedTopics.reasoning ?? []),
+      ...(supportedTopics.english ?? ["Reading Comprehension"]),
     ].map((t) => String(t).toLowerCase()),
     [supportedTopics]
   );
@@ -115,6 +118,8 @@ function TopicwiseTestView({
   const [negativeMarks, setNegativeMarks] = useState(0.25);
   const [reviewPolicy, setReviewPolicy] = useState("after_submit");
   const [difficulty, setDifficulty] = useState("medium");
+  const [rcCategory, setRcCategory] = useState("mixed");
+  const [rcPassageLength, setRcPassageLength] = useState("medium");
   const [selectedQuestionIds, setSelectedQuestionIds] = useState([]);
   const [topicBankQuestions, setTopicBankQuestions] = useState([]);
   const [loadingBank, setLoadingBank] = useState(false);
@@ -281,6 +286,9 @@ function TopicwiseTestView({
               subtopicName,
               difficulty,
               replaceExisting: false,
+              ...(String(topic || "").trim().toLowerCase() === "reading comprehension"
+                ? { rcCategory: rcCategory === "mixed" ? "" : rcCategory, passageLength: rcPassageLength }
+                : {}),
             }),
           });
           onToast(
@@ -661,9 +669,52 @@ function TopicwiseTestView({
                 </strong>
                 <p>
                   {canAutoGenerateSelectedTopic
-                    ? `Generate ${Math.max(0, Number(targetQuestions) - selectedQuestionIds.length)} fresh, rule-verified ${topic} questions directly into ${setLabel} (automatically avoiding questions used in earlier sets).`
+                    ? String(topic || "").trim().toLowerCase() === "reading comprehension"
+                      ? `AI Reading Comprehension Engine Ready: Generates complete 5-question passage sets (1 passage + 5 questions = 1 atomic set; choose 5, 10, 15, 20, 25, or 30 Qs).`
+                      : `Generate ${Math.max(0, Number(targetQuestions) - selectedQuestionIds.length)} fresh, rule-verified ${topic} questions directly into ${setLabel} (automatically avoiding questions used in earlier sets).`
                     : `This topic is not yet in the auto-generator. Select published "${topic}" questions from the filtered Question Bank below.`}
                 </p>
+                {String(topic || "").trim().toLowerCase() === "reading comprehension" && (
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
+                    <select
+                      aria-label="RC Category"
+                      value={rcCategory}
+                      onChange={(e) => setRcCategory(e.target.value)}
+                      style={{ height: "34px", padding: "0 10px", borderRadius: "7px", border: "1px solid #d4d4e8", background: "#fff", fontSize: "12.5px" }}
+                    >
+                      <option value="mixed">Mixed Banking &amp; Editorial Categories</option>
+                      {[
+                        "Reading Comprehension – Banking",
+                        "Reading Comprehension – Economy",
+                        "Reading Comprehension – Business",
+                        "Reading Comprehension – Finance",
+                        "Reading Comprehension – Social Issues",
+                        "Reading Comprehension – Technology",
+                        "Reading Comprehension – Environment",
+                        "Reading Comprehension – Education",
+                        "Reading Comprehension – General Topics",
+                        "Reading Comprehension – Editorial",
+                        "Reading Comprehension – Inference Based",
+                        "Reading Comprehension – Fact Based",
+                        "Reading Comprehension – Tone Based",
+                        "Reading Comprehension – Title Selection",
+                        "Reading Comprehension – Vocabulary Based",
+                      ].map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <select
+                      aria-label="Passage Length"
+                      value={rcPassageLength}
+                      onChange={(e) => setRcPassageLength(e.target.value)}
+                      style={{ height: "34px", padding: "0 10px", borderRadius: "7px", border: "1px solid #d4d4e8", background: "#fff", fontSize: "12.5px" }}
+                    >
+                      <option value="short">Short Passage (220–320 words)</option>
+                      <option value="medium">Medium Passage (380–520 words)</option>
+                      <option value="long">Long Passage (560–740 words)</option>
+                    </select>
+                  </div>
+                )}
               </div>
               {canAutoGenerateSelectedTopic && (
                 <button
@@ -716,32 +767,89 @@ function TopicwiseTestView({
               {loadingBank ? (
                 <p>Loading published {topic} questions…</p>
               ) : topicBankQuestions.length > 0 ? (
-                topicBankQuestions.map((q) => {
-                  const checked = selectedQuestionIds.includes(q.id);
-                  const limitReached =
-                    !checked && selectedQuestionIds.length >= Number(targetQuestions);
-                  return (
-                    <label key={q.id} className={limitReached ? "disabled-opt" : ""}>
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        disabled={limitReached}
-                        onChange={(e) =>
-                          setSelectedQuestionIds((old) =>
-                            e.target.checked
-                              ? [...old, q.id]
-                              : old.filter((id) => id !== q.id)
-                          )
-                        }
-                      />
-                      <span>
-                        {q.topic_name}
-                        {q.subtopic_name ? ` · ${q.subtopic_name}` : ""} · {q.difficulty}
-                      </span>
-                      <small>{q.question_text}</small>
-                    </label>
-                  );
-                })
+                String(topic || "").trim().toLowerCase() === "reading comprehension" ? (
+                  (() => {
+                    const groups = new Map();
+                    for (const q of topicBankQuestions) {
+                      const gid = q.passage_group_id || q.id;
+                      if (!groups.has(gid)) {
+                        groups.set(gid, {
+                          gid,
+                          title: q.passage_title || "Reading Comprehension Passage Set",
+                          difficulty: q.difficulty || "medium",
+                          questions: [],
+                        });
+                      }
+                      groups.get(gid).questions.push(q);
+                    }
+                    return [...groups.values()].map((grp, idx) => {
+                      const setIds = grp.questions.map((x) => x.id);
+                      const checked = setIds.every((id) => selectedQuestionIds.includes(id));
+                      const unpicked = setIds.filter((id) => !selectedQuestionIds.includes(id)).length;
+                      const limitReached =
+                        !checked && selectedQuestionIds.length + unpicked > Number(targetQuestions);
+                      return (
+                        <label
+                          key={grp.gid}
+                          className={limitReached ? "disabled-opt" : ""}
+                          title={
+                            limitReached
+                              ? `Needs ${unpicked} remaining slots (only ${Math.max(0, Number(targetQuestions) - selectedQuestionIds.length)} left)`
+                              : `Toggle complete ${grp.questions.length}-question Reading Comprehension set`
+                          }
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            disabled={limitReached}
+                            onChange={(e) =>
+                              setSelectedQuestionIds((old) => {
+                                if (e.target.checked) {
+                                  const next = new Set(old);
+                                  for (const id of setIds) next.add(id);
+                                  return [...next];
+                                }
+                                const rem = new Set(setIds);
+                                return old.filter((id) => !rem.has(id));
+                              })
+                            }
+                          />
+                          <span>
+                            RC Set {idx + 1} · {grp.questions.length} Qs · {grp.difficulty}
+                          </span>
+                          <small>{grp.title}</small>
+                        </label>
+                      );
+                    });
+                  })()
+                ) : (
+                  topicBankQuestions.map((q) => {
+                    const checked = selectedQuestionIds.includes(q.id);
+                    const limitReached =
+                      !checked && selectedQuestionIds.length >= Number(targetQuestions);
+                    return (
+                      <label key={q.id} className={limitReached ? "disabled-opt" : ""}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={limitReached}
+                          onChange={(e) =>
+                            setSelectedQuestionIds((old) =>
+                              e.target.checked
+                                ? [...old, q.id]
+                                : old.filter((id) => id !== q.id)
+                            )
+                          }
+                        />
+                        <span>
+                          {q.topic_name}
+                          {q.subtopic_name ? ` · ${q.subtopic_name}` : ""} · {q.difficulty}
+                        </span>
+                        <small>{q.question_text}</small>
+                      </label>
+                    );
+                  })
+                )
               ) : (
                 <p>
                   No published questions found for "{topic}" in the Question Bank yet.
@@ -938,6 +1046,15 @@ function TopicwiseTestView({
                                 }
                               >
                                 {t.status === "published" ? "Unpublish" : "Publish"}
+                              </button>
+                              <button
+                                type="button"
+                                className="danger-outline-btn"
+                                disabled={isBusy}
+                                title="Permanently delete this topicwise set"
+                                onClick={() => onDeleteSet?.(t)}
+                              >
+                                <Trash2 size={13} /> Delete
                               </button>
                             </div>
                           </div>

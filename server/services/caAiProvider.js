@@ -30,8 +30,11 @@ export function getAiConfig(env = process.env) {
     3_000,
     Math.min(60_000, Number(env.CA_AI_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS),
   );
-  const maxRetries = Math.max(0, Math.min(3, Number(env.CA_AI_MAX_RETRIES) || DEFAULT_MAX_RETRIES));
-
+  const parsedRetries =
+  env.CA_AI_MAX_RETRIES !== undefined && String(env.CA_AI_MAX_RETRIES).trim() !== ""
+    ? Number(env.CA_AI_MAX_RETRIES)
+    : DEFAULT_MAX_RETRIES;
+    const maxRetries = Math.max(0, Math.min(3, Number.isFinite(parsedRetries) ? parsedRetries : DEFAULT_MAX_RETRIES));
   return {
     enabled,
     provider,

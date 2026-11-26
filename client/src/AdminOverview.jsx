@@ -16,6 +16,7 @@ import { RoleManagementView } from "./components/admin/RoleManagementView";
 import { MockTestBuilderView } from "./components/admin/MockTestBuilderView";
 import { TopicwiseTestView } from "./components/admin/TopicwiseTestView";
 import { AdminCaStudio } from "./components/admin/AdminCaStudio";
+import { AdminReadingComprehension } from "./components/admin/AdminReadingComprehension";
 import { AttemptReportsView } from "./components/admin/AttemptReportsView";
 import { AuditLogsView } from "./components/admin/AuditLogsView";
 import { AdminPaymentsView } from "./components/admin/AdminPaymentsView";
@@ -89,6 +90,8 @@ function AdminOverview({
   const [tests, setTests] = useState([]);
   const [exams, setExams] = useState([]);
   const [questions, setQuestions] = useState([]);
+  const [stageQuestions, setStageQuestions] = useState([]);
+  const [stageQuestionsLoading, setStageQuestionsLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [affairs, setAffairs] = useState([]);
   const [reports, setReports] = useState([]);
@@ -175,7 +178,7 @@ function AdminOverview({
         setQuestions(q.questions);
         setSupportedTopics(sup.supportedTopics ?? { quant: [], reasoning: [] });
       });
-    } else if (section === "Current affairs") {
+    } else if (section === "Current affairs" || section === "Reading comprehension") {
       task = Promise.resolve();
     } else if (section === "Reports") {
       task = Promise.all([
@@ -200,6 +203,28 @@ function AdminOverview({
     }
     task.catch((e) => setError(e.message)).finally(() => setBusy(false));
   }, [section, search, roleFilter, statusFilter]);
+
+  useEffect(() => {
+    if (!builder || !stageId) {
+      setStageQuestions([]);
+      return;
+    }
+    let cancelled = false;
+    setStageQuestionsLoading(true);
+    api(`/admin/questions?stageId=${encodeURIComponent(stageId)}&status=published`)
+      .then((res) => {
+        if (!cancelled) setStageQuestions(res.questions ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setStageQuestions([]);
+      })
+      .finally(() => {
+        if (!cancelled) setStageQuestionsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [builder, stageId, tests]);
 
   const updateRole = async (id, newRole) => {
     setBusy(true);
@@ -317,6 +342,63 @@ function AdminOverview({
       setBusy(false);
     }
   }
+  async function deleteTest(t) {
+    const attemptCount = Number(t.attempt_count || 0);
+    const isPublished = t.status === "published";
+    const confirmed = await onConfirmModal({
+      title: `Delete "${t.name}"?`,
+      message:
+        attemptCount > 0
+          ? `This ${isPublished ? "published " : ""}test set (${t.set_label || `Set ${t.set_number || 1}`}) has ${attemptCount} student attempt(s). Deleting it will permanently remove the test set and its attempt records. Original questions in the Question Bank will remain intact.`
+          : `Are you sure you want to permanently delete this ${isPublished ? "published " : ""}test set (${t.set_label || `Set ${t.set_number || 1}`})? Original questions in the Question Bank will remain intact.`,
+      confirmText: attemptCount > 0 ? "Delete Set & Attempts" : "Delete Test Set",
+      cancelText: "Cancel",
+      type: "danger",
+      icon: "trash",
+    });
+    if (!confirmed) return;
+
+    setBusy(true);
+    setError("");
+    try {
+      const url = `/admin/tests/${t.id}${attemptCount > 0 ? "?force=true" : ""}`;
+      const res = await fetch(`/api${url}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = res.status === 204 ? null : await res.json();
+      if (!res.ok) {
+        if (res.status === 409 && data?.requiresForce) {
+          setBusy(false);
+          const forceConfirmed = await onConfirmModal({
+            title: `Force Delete "${t.name}"?`,
+            message:
+              data.error ||
+              `This test has ${data.attemptCount || "existing"} student attempt(s). Permanently delete the test set and all its attempt records?`,
+            confirmText: "Yes, Permanently Delete",
+            cancelText: "Cancel",
+            type: "danger",
+            icon: "trash",
+          });
+          if (!forceConfirmed) return;
+          setBusy(true);
+          await api(`/admin/tests/${t.id}?force=true`, { method: "DELETE" });
+        } else {
+          throw new Error(data?.error ?? "Failed to delete mock test.");
+        }
+      }
+      if (editingTestId === t.id) {
+        resetTestBuilder();
+      }
+      await refreshTests();
+      onToast(`Deleted test set "${t.name}".`);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
   function editTest(t) {
     setEditingTestId(t.id);
     setExamId(t.exam_id);
@@ -336,6 +418,7 @@ function AdminOverview({
     setSelected(t.question_ids ?? []);
     setBuilder(true);
     setError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
   async function createTest() {
     if (!examId || !stageId || !testName.trim()) {
@@ -570,6 +653,8 @@ function AdminOverview({
           tests={tests}
           exams={exams}
           questions={questions}
+          stageQuestions={stageQuestions}
+          stageQuestionsLoading={stageQuestionsLoading}
           builder={builder}
           editingTestId={editingTestId}
           examId={examId}
@@ -589,6 +674,7 @@ function AdminOverview({
           onSetBuilder={setBuilder}
           onResetTestBuilder={resetTestBuilder}
           onEditTest={editTest}
+          onDeleteTest={deleteTest}
           onChangeStatus={changeStatus}
           onDuplicateSet={duplicateSet}
           onAutoIncrementSet={autoIncrementExamSet}
@@ -641,6 +727,7 @@ function AdminOverview({
           onRefreshTests={refreshTests}
           onPublishToggle={changeStatus}
           onDuplicateSet={duplicateSet}
+          onDeleteSet={deleteTest}
           onToast={onToast}
           onError={setError}
           api={api}
@@ -649,6 +736,10 @@ function AdminOverview({
 
       {section === "Current affairs" && (
         <AdminCaStudio onToast={onToast} />
+      )}
+
+      {section === "Reading comprehension" && (
+        <AdminReadingComprehension onToast={onToast} onConfirmModal={onConfirmModal} />
       )}
 
       {section === "Reports" && <AttemptReportsView
