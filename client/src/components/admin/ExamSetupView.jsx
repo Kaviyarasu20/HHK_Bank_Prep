@@ -84,7 +84,6 @@ function ExamSetupView({
       title={`Code: ${item.code} \xB7 Status: ${item.status}`}
     >
                             <span>{item.name}</span>
-                            <small>{item.status}</small>
                           </button>;
   })}
                     </div>
@@ -96,17 +95,20 @@ function ExamSetupView({
               <label>
                 Examination
                 <select
-    value={examIndex}
+    value={exam?.id ?? ""}
     onChange={(e) => {
-      onSetExamIndex(Number(e.target.value));
-      onSetStageIndex(0);
+      const nextIdx = exams.findIndex((x) => x.id === e.target.value);
+      if (nextIdx >= 0) {
+        onSetExamIndex(nextIdx);
+        onSetStageIndex(0);
+      }
     }}
   >
                   <ExamOptGroups
     exams={exams}
     getKey={(e) => e.id}
-    getValue={(_e, i) => i}
-    getLabel={(e) => `${e.name} \xB7 ${e.status}`}
+    getValue={(e) => e.id}
+    getLabel={(e) => e.name}
   />
                 </select>
               </label>
@@ -124,19 +126,19 @@ function ExamSetupView({
               </label>
             </div>
 
-            {exam && stage && <>
+            {exam && stage && <div key={exam.id}>
                 <div className="config-fields">
                   <Field
     label="Stage name"
     value={stage.name}
     onChange={(v) => onSetStage("name", v)}
   />
-                  <Field
-    label="Duration (seconds)"
-    type="number"
-    value={String(stage.duration_seconds)}
-    onChange={(v) => onSetStage("duration_seconds", v)}
-  />
+                <Field
+  label="Duration (minutes)"
+  type="number"
+  value={stage.duration_seconds ? String(Math.round(Number(stage.duration_seconds) / 60)) : ""}
+  onChange={(v) => onSetStage("duration_seconds", v === "" ? 0 : Math.max(0, Number(v)) * 60)}
+/>
                   <Field label="Exam code" value={exam.code} readOnly />
                   <label className="form-field">
                     Category
@@ -205,7 +207,7 @@ function ExamSetupView({
                       <tr>
                         <th>Section</th>
                         <th>Questions</th>
-                        <th>Section time (sec)</th>
+                        <th>Section time (min)</th>
                         <th>Marks / correct</th>
                         <th>Penalty</th>
                       </tr>
@@ -231,16 +233,18 @@ function ExamSetupView({
   />
                           </td>
                           <td>
-                            <input
-    type="number"
-    min="0"
-    value={s.duration_seconds ?? ""}
-    onChange={(e) => onSetSection(
+                          <input
+  type="number"
+  min="0"
+  value={s.duration_seconds ? Math.round(Number(s.duration_seconds) / 60) : ""}
+  onChange={(e) =>
+    onSetSection(
       i,
       "duration_seconds",
-      e.target.value
-    )}
-  />
+      e.target.value === "" ? "" : Math.max(0, Number(e.target.value)) * 60
+    )
+  }
+/>
                           </td>
                           <td>
                             <input
@@ -300,7 +304,7 @@ function ExamSetupView({
                     </button>
                   </div>
                 </div>
-              </>}
+              </div>}
           </>}
 
         {!exams.length && !busy && <div className="empty-questions">No exam configurations found.</div>}

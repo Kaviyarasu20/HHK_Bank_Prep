@@ -11,6 +11,7 @@ import {
   EXAM_PATTERN_CATALOG,
   findCatalogPattern,
   inferSubjectKeyFromSectionName,
+  getDefaultTopicDistributionsForSubject,
   DEFAULT_REPETITION_POLICY,
 } from "../exam-engine/examPatternCatalog.js";
 import { subjectGeneratorRegistry } from "../exam-engine/subjectGeneratorRegistry.js";
@@ -19,6 +20,23 @@ import {
   generateIntelligentExamWiseMockTest,
 } from "../exam-engine/intelligentMockTestEngine.js";
 import { getNextSetInfo } from "../services/mockTestValidation.js";
+import {
+  inspectPatternBankAvailability,
+  selectExamWiseQuestionsFromBank,
+} from "../exam-engine/bankQuestionSelector.js";
+
+async function resolveAlignedDurationSeconds(clientOrPool, stageId, fallbackSeconds) {
+  if (!stageId) return Number(fallbackSeconds || 3600);
+  const res = await clientOrPool.query(
+    `SELECT duration_seconds FROM exam_sections WHERE stage_id = $1`,
+    [stageId]
+  );
+  if (res.rowCount > 0 && res.rows.every((r) => r.duration_seconds !== null)) {
+    const sum = res.rows.reduce((acc, r) => acc + Number(r.duration_seconds || 0), 0);
+    if (sum > 0) return sum;
+  }
+  return Number(fallbackSeconds || 3600);
+}
 
 export const examEngineRouter = Router();
 examEngineRouter.use(requireAdmin);
@@ -200,21 +218,27 @@ async function resolvePatternForRequest(input) {
       )
     ).rows;
 
+    const isMainsStage = String(st.stage_name || "").toLowerCase().includes("main");
     const sections = (input.customSections?.length ? input.customSections : dbSections.map((sec) => {
       const subjectKey = inferSubjectKeyFromSectionName(sec.name);
       const catalogSec = catalog?.sections?.find((cs) => cs.subjectKey === subjectKey);
+      const secCount = Number(sec.question_count || catalogSec?.questionCount || 0);
+      const rawTopics =
+        catalogSec?.topicDistributions?.length && Number(catalogSec.questionCount) === secCount
+          ? catalogSec.topicDistributions
+          : getDefaultTopicDistributionsForSubject(subjectKey, secCount, isMainsStage);
       return {
         sectionId: sec.id,
         sectionName: sec.name,
         subjectKey,
-        questionCount: Number(sec.question_count || catalogSec?.questionCount || 0),
+        questionCount: secCount,
         marksPerQuestion: Number(sec.marks_per_correct ?? catalogSec?.marksPerQuestion ?? 1),
         negativeMarks: Number(sec.negative_marks ?? catalogSec?.negativeMarks ?? 0.25),
         durationSeconds: sec.duration_seconds ?? catalogSec?.durationSeconds ?? null,
         sortOrder: Number(sec.sort_order ?? 0),
         isEnabled: true,
         difficultyDistribution: catalogSec?.difficultyDistribution || { easy: 30, medium: 50, hard: 20 },
-        topicDistributions: catalogSec?.topicDistributions || [],
+        topicDistributions: rawTopics,
       };
     }));
 
@@ -580,7 +604,7 @@ examEngineRouter.post("/generate", async (req, res) => {
           result.generationReport.totalRequired,
           testName,
           input.description || `Auto-generated via Intelligent Exam-Wise Engine (${pattern.examName} ${pattern.stageName}).`,
-          pattern.durationSeconds,
+          await resolveAlignedDurationSeconds(client, pattern.stageId, pattern.durationSeconds),
           input.reviewPolicy,
           pattern.patternVersionId || null,
           JSON.stringify(result.generationReport),
@@ -652,6 +676,193 @@ examEngineRouter.post("/generate", async (req, res) => {
     res.status(201).json({
       test: createdTest,
       ...result,
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+});
+
+
+// 8. Selection Blueprint: Active Pattern (Custom or Research Default) + Live Question Bank Availability
+examEngineRouter.get("/selection-blueprint", async (req, res) => {
+  const examId = req.query.examId ? String(req.query.examId) : undefined;
+  const stageId = req.query.stageId ? String(req.query.stageId) : undefined;
+  const examCode = req.query.examCode ? String(req.query.examCode) : undefined;
+  const stageName = req.query.stageName ? String(req.query.stageName) : "Prelims";
+
+  const pattern = await resolvePatternForRequest({ examId, stageId, examCode, stageName });
+  const availability = await inspectPatternBankAvailability(pool, pattern);
+
+  res.json({
+    blueprint: {
+      ...pattern,
+      isCustomPattern: Boolean(pattern.patternVersionId),
+      sections: availability.sections,
+      totalRequired: availability.totalRequired,
+      totalAvailableForPattern: availability.totalAvailableForPattern,
+      hasShortages: availability.hasShortages,
+      shortageWarnings: availability.shortageWarnings,
+    },
+    generators: subjectGeneratorRegistry.listStatuses(),
+  });
+});
+
+// 9. Restore Recommended Default Pattern (deactivates custom DB override for exam + stage)
+examEngineRouter.post("/patterns/reset", async (req, res) => {
+  const schema = z.object({
+    examId: z.string().uuid(),
+    stageId: z.string().uuid(),
+  });
+  const input = validate(schema, req.body);
+
+  await pool.query(
+    `UPDATE exam_pattern_versions
+     SET is_active = FALSE, updated_at = NOW()
+     WHERE exam_id = $1 AND stage_id = $2 AND is_active = TRUE`,
+    [input.examId, input.stageId]
+  );
+
+  const defaultPattern = await resolvePatternForRequest({
+    examId: input.examId,
+    stageId: input.stageId,
+  });
+  const availability = await inspectPatternBankAvailability(pool, defaultPattern);
+
+  res.json({
+    restored: true,
+    blueprint: {
+      ...defaultPattern,
+      isCustomPattern: false,
+      sections: availability.sections,
+      totalRequired: availability.totalRequired,
+      totalAvailableForPattern: availability.totalAvailableForPattern,
+      hasShortages: availability.hasShortages,
+      shortageWarnings: availability.shortageWarnings,
+    },
+  });
+});
+
+// 10. Generate Complete Exam-Wise Mock Test strictly from existing Question Bank by Topic Distribution
+examEngineRouter.post("/generate-from-bank", async (req, res) => {
+  const bankGenSchema = z.object({
+    examId: z.string().uuid(),
+    stageId: z.string().uuid(),
+    durationSeconds: z.number().int().positive().max(86400).optional(),
+    sections: z.array(sectionRuleSchema).min(1).max(20).optional(),
+    testName: z.string().trim().max(180).optional(),
+    description: z.string().trim().max(4000).default(""),
+    setNumber: z.number().int().positive().max(999).optional(),
+    setLabel: z.string().trim().max(60).optional(),
+    reviewPolicy: z.enum(["after_submit", "never"]).default("after_submit"),
+  });
+  const input = validate(bankGenSchema, req.body);
+
+  const basePattern = await resolvePatternForRequest({
+    examId: input.examId,
+    stageId: input.stageId,
+    customSections: input.sections,
+  });
+  if (input.durationSeconds) {
+    basePattern.durationSeconds = input.durationSeconds;
+  }
+
+  // Prefer excluding questions used in the last 5 mock tests for this exam+stage
+  const recentRes = await pool.query(
+    `SELECT DISTINCT mtq.question_id
+     FROM mock_test_questions mtq
+     JOIN mock_tests mt ON mt.id = mtq.mock_test_id
+     WHERE mt.exam_id = $1 AND mt.stage_id = $2
+       AND mt.id IN (
+         SELECT id FROM mock_tests
+         WHERE exam_id = $1 AND stage_id = $2
+         ORDER BY created_at DESC
+         LIMIT 5
+       )`,
+    [input.examId, input.stageId]
+  );
+  const preferExcludeIds = recentRes.rows.map((r) => r.question_id);
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const selection = await selectExamWiseQuestionsFromBank(client, {
+      pattern: basePattern,
+      preferExcludeIds,
+      shuffleWithinSection: true,
+    });
+
+    if (!selection.ok) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        error: `Insufficient published questions in the Question Bank for ${selection.shortageWarnings.length} topic(s). Add or auto-generate the missing topic questions, or adjust the topic counts.`,
+        shortageWarnings: selection.shortageWarnings,
+        sectionReports: selection.sectionReports,
+        totalSelected: selection.totalSelected,
+        totalRequired: selection.totalRequired,
+      });
+    }
+
+    const nextInfo = await getNextSetInfo(client, {
+      testType: "EXAM_WISE",
+      examId: input.examId,
+      stageId: input.stageId,
+    });
+    const setNumber = input.setNumber ?? nextInfo.nextSetNumber;
+    const setLabel = (input.setLabel || `Set ${setNumber}`).trim();
+    const testName =
+      input.testName || `${basePattern.examName} ${basePattern.stageName} - ${setLabel}`;
+
+    const report = {
+      mode: "BANK_TOPIC_BLUEPRINT",
+      patternFulfilled: true,
+      totalGenerated: selection.totalSelected,
+      totalRequired: selection.totalRequired,
+      sectionReports: selection.sectionReports,
+    };
+
+    const createdTest = (
+      await client.query(
+        `INSERT INTO mock_tests
+           (exam_id, stage_id, test_type, set_number, set_label, target_questions,
+            name, description, duration_seconds, review_policy, selection_mode,
+            pattern_version_id, generation_report, repetition_policy, status, created_by)
+         VALUES ($1,$2,'EXAM_WISE',$3,$4,$5,$6,$7,$8,$9,'rule_based',$10,$11::jsonb,$12::jsonb,'draft',$13)
+         RETURNING *`,
+        [
+          input.examId,
+          input.stageId,
+          setNumber,
+          setLabel,
+          selection.totalRequired,
+          testName,
+          input.description || `Topic-wise blueprint mock test generated from Question Bank (${basePattern.examName} ${basePattern.stageName}).`,
+          await resolveAlignedDurationSeconds(client, input.stageId, basePattern.durationSeconds),
+          input.reviewPolicy,
+          basePattern.patternVersionId || null,
+          JSON.stringify(report),
+          JSON.stringify(basePattern.repetitionPolicy || DEFAULT_REPETITION_POLICY),
+          req.session.userId,
+        ]
+      )
+    ).rows[0];
+
+    let sortOrder = 0;
+    for (const q of selection.pickedQuestions) {
+      await client.query(
+        `INSERT INTO mock_test_questions (mock_test_id, question_id, section_id, sort_order)
+         VALUES ($1, $2, $3, $4)`,
+        [createdTest.id, q.id, q.section_id, sortOrder++]
+      );
+    }
+
+    await client.query("COMMIT");
+    res.status(201).json({
+      test: createdTest,
+      generationReport: report,
+      shortageWarnings: [],
     });
   } catch (err) {
     await client.query("ROLLBACK");

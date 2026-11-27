@@ -1,156 +1,98 @@
 # HHK Banking Exam Preparation Platform
 
-A modern, production-grade web application tailored for Indian banking recruitment examinations (IBPS, SBI, RBI, NABARD, and Other Financial Institutions). The platform provides a full student workspace (timed CBT mock tests, daily challenges, topic-wise practice, bookmarks, live milestones) alongside an administrative control centre (exam pattern configuration, question bank importing, student management, attempt grading, and audit logs).
+A modern, production-grade web application tailored for Indian banking recruitment examinations (IBPS, SBI, RBI, NABARD, and Other Financial Institutions). The platform provides a full student workspace (timed CBT mock tests, daily challenges, topic-wise practice, bookmarks, live milestones) alongside an administrative control center (exam pattern configuration, modular question engines, question bank importing, student management, attempt grading, and audit logs).
 
-> \[!TIP\]
-> For the complete system architecture, data models, entity relationships, and API lifecycle maps, see [docs/ARCHITECTURE.md](https://www.google.com/search?q=docs/ARCHITECTURE.md).
+> [!TIP]
+> For the complete system architecture, data models, entity relationships, and API lifecycle maps, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+---
 
 ## ⚡ Quick Run (Single Command)
 
 To launch the entire application (both backend Express API and frontend Vite React app together):
 
-```
+```powershell
 npm run dev
-
 ```
 
-* **Frontend Web App**: <http://localhost:5173>
+- **Frontend Web App**: [http://localhost:5173](http://localhost:5173)
+- **Backend REST API**: [http://localhost:3001](http://localhost:3001)
 
-* **Backend REST API**: <http://localhost:3001>
+---
 
-## What's New (Latest Release)
+## What's New in V11 (Latest Release)
 
-### 1. AI-Powered Current Affairs Question Generator & Practice Platform
+### 1. 100% Reasoning Ability Modular Question Engine (19/19 Topics Auto-Generate Ready)
+- **Complete Deterministic Reasoning Suite (`server/question-engine/generators/reasoning/`)**: Built, solver-verified, and wired all **19/19** banking-exam Reasoning topics into `engineRouter.js`, `questionGenerator.js`, and `subjectGeneratorRegistry.js`:
+  - **Core & Puzzle Engines**: Blood Relations, Seating Arrangement (Linear, Circular, Dual-Row, Uncertain), Floor-Based Puzzles, Multi-Family Puzzles (10 families), Syllogism, Inequality, Number Series, Data Sufficiency.
+  - **Newly Added & Verified Engines**: Coding-Decoding, Direction & Distance, Order & Ranking, Alphanumeric Series, Letter Series, Input-Output, Logical Reasoning, Statement & Conclusion, Statement & Assumption, Cause & Effect, Analogy, and Classification.
+- **Engine Quality Guarantees**: Strict 5-option banking format (`A`–`E`), balanced answer-key distribution, multi-subtype rotation on single-item loops, SHA-256 fingerprint deduplication, and full regression verification (`tests/verify_all_reasoning_topics.js`: 19/19 topics, 190/190 questions passing).
 
-* **Complete Legacy Replacement (`032_ai_ca_question_platform.sql`)**: Replaced legacy static current affairs articles/flashcards/capsules with a normalized AI-driven platform (`ca_source_batches`, `ca_extracted_events`, `ca_generated_questions`, `ca_practice_sets`, `ca_student_attempts`, `ca_pdf_exports`, `ca_trusted_sources`).
+### 2. 100% English Language Modular Question Engine (13/13 Topics Auto-Generate Ready)
+- **12 Deterministic Modular English Engines (`server/question-engine/generators/english/`)**:
+  - Cloze Test, Error Detection, Sentence Correction, Fill in the Blanks, Para Jumbles, Sentence Rearrangement, Phrase Replacement, Vocabulary, Synonyms & Antonyms, Idioms & Phrases, Word Usage, and **Grammar** (5 subtopics: Active & Passive Voice, Direct & Indirect Speech, Tenses/Conditionals/Modals, Articles & Determiners, Prepositions/Conjunctions/Question Tags).
+  - Verified end-to-end across all 12 modular topics (120/120 unique questions, balanced `A`–`E` keys, < 2 ms per 20-question batch).
+- **Gemini AI Reading Comprehension Connected to Question Bank (`server/routes/admin.js`, `rcAiEngineService.js`)**:
+  - Connected `generateRcPassageAndQuestionsWithAi` directly into `POST /api/admin/questions/generate` (atomic 5-question passage sets) and merged `"Reading Comprehension"` with `SUPPORTED_AUTO_TOPICS.english` in `GET /api/admin/questions/generate/topics` for full **13/13 English Language** coverage.
 
-* **Backend-Only AI Integration (`caAiProvider.js`, `caAiEngineService.js`)**: Supports Gemini and OpenAI via environment variables with multi-model failover, strict schema validation, duplicate detection, and zero simulated fallbacks when disabled.
+### 3. Research-Based Exam-Wise Question Selection, Zero-Timer-Mismatch Guard & Group-Aware Sequencing
+- **15 Official 2026 Banking Exam Patterns (`server/exam-engine/examPatternCatalog.js`)**:
+  - Separate Prelims & Mains blueprints covering **IBPS RRB Office Assistant (Clerk)**, **IBPS RRB Officer Scale I (PO)**, **IBPS Clerk (CSA)**, **IBPS PO**, **SBI Clerk**, **SBI PO**, **RBI Assistant**, and **RBI Grade B (Phase 1)** with historical-trend topic distributions and smart subject inference (including `Aptitude`, `Numerical Ability`, `Quantitative Aptitude`, `Reasoning & Computer Aptitude`, and custom section fallbacks).
+- **Active Multi-Subject Registry (`server/exam-engine/subjectGeneratorRegistry.js`)**:
+  - Activated **Quantitative Aptitude**, **Reasoning Ability**, and **English Language** in the centralized registry, enabling 1-click full Prelims mock test generation (e.g., 80/80 unique questions for IBPS RRB Office Assistant Prelims with 0 duplicates).
+- **Interactive Admin Question Selection Editor (`client/src/components/admin/ExamQuestionSelectionSection.jsx`, `MockTestBuilderView.jsx`)**:
+  - Automatically loads applicable subjects, research-based topic counts, trend ranges, and live published Question Bank stock per topic upon selecting any Exam + Stage.
+  - Lets admins edit topic question counts, enable/disable individual topics or sections, adjust marks/negative marks/duration, auto-balance totals, **Save Custom Pattern** (`POST /api/admin/exam-engine/patterns`), **Restore Default** (`POST /api/admin/exam-engine/patterns/reset`), and generate strict Question Bank tests (`POST /api/admin/exam-engine/generate-from-bank` via `server/exam-engine/bankQuestionSelector.js`) with itemized per-topic shortage warnings and zero silent substitution of unrelated topics.
+- **Zero Timer Mismatch on Publish (`server/services/mockTestValidation.js`, `server/routes/examEngine.js`)**:
+  - Automatically aligns `mock_tests.duration_seconds` with `exam_sections` sectional timer sums during generation, UI edits, and publish validation, and surfaces clear publish block reasons directly under the Blueprint Progress badge in **Manage Exam Wise Tests**.
+- **Group-Aware Consecutive Question Sequencing (`server/exam-engine/questionSequencer.js`)**:
+  - Guarantees that all questions belonging to the same **Data Interpretation (DI)**, **Seating Arrangement**, **Floor/Box/Month/Date/Linear/Circular Puzzle**, **Reading Comprehension**, or **Cloze/Passage** set always appear **strictly consecutively** and in their **original internal order (`1, 2, 3, 4, 5`)**, while shuffling distinct sets and standalone questions at the atomic block level across `intelligentMockTestEngine.js`, `bankQuestionSelector.js`, and `questionSelection.js` (Prelims & Mains).
 
-* **14 Banking Exam Question Formats & 6 Practice Set Presets**: Full Admin Studio (`AdminCaStudio.jsx`) with day-wise IST date filtering, topic-grouped Question Review, **Approve All Pending**, inline Question Editor (`PUT /questions/:id`), Manual Question Selection (`GET`/`PUT /practice-sets/:id/questions`), strict no-reuse tracking across sets (`used_in_set_ids`), and auto-archiving for duplicate topics.
+### 4. Phase 1 & Phase 2 Search Engine Optimization (SEO) & Public Landing Pages
+- **Technical & On-Page SEO (`client/index.html`, `server/services/seoService.js`, `server/index.js`)**:
+  - Upgraded `client/index.html` with full title/description metadata, canonical link, Open Graph & Twitter Card tags, Schema.org `EducationalOrganization` + `WebSite` JSON-LD, and a lightweight 37.9 KB `/favicon.png` (99.1% smaller than the original 4.2 MB icon).
+  - Added `client/public/robots.txt`, dynamic `GET /robots.txt`, dynamic `GET /sitemap.xml` (core public routes + live PostgreSQL exam discovery), and server-side SPA meta-tag injection in Express (`server/index.js`) with automatic `noindex, nofollow` on `/admin/*`, `/api/*`, and authenticated workspaces.
+- **Public SEO Exam Landing Pages & Clean URL Routing (`client/src/utils/publicRoutes.js`, `client/src/utils/seo.js`, `SeoLandingPage.jsx`, `PublicPortal.jsx`, `App.jsx`)**:
+  - Added clean History API URL routing (`/` through `/exams`, `/mock-tests`, `/pricing`, `/exams/ibps-po`, `/exams/sbi-po`, `/banking-awareness`, `/current-affairs`, and legal/support routes) with crawlable `<a href>` links, dynamic `document.title`/canonical updates, and dedicated landing pages featuring exam-pattern tables, syllabus coverage, and `FAQPage` JSON-LD.
 
-* **Trusted Source RSS Fetch Pipeline (`caAutomationService.js`, `caStudioAdmin.js`)**: Fixed outbound SSRF URL validation unpacking (`validateOutboundFeedUrl`) and XML parser mapping (`parseFeedXml`), added per-source **Fetch Now** and **Delete** buttons, and added a live **Last Fetch Results** status box showing exact item counts or errors.
+### 5. AI-Powered Current Affairs Question Generator & Practice Platform
+- **Complete Legacy Replacement (`032_ai_ca_question_platform.sql`)**: Normalized AI-driven platform (`ca_source_batches`, `ca_extracted_events`, `ca_generated_questions`, `ca_practice_sets`, `ca_student_attempts`, `ca_pdf_exports`, `ca_trusted_sources`).
+- **Backend-Only AI Integration (`caAiProvider.js`, `caAiEngineService.js`)**: Supports Gemini and OpenAI via environment variables with multi-model failover, strict schema validation, duplicate detection, and zero simulated fallbacks when disabled.
+- **14 Banking Exam Question Formats & 6 Practice Set Presets**: Full Admin Studio (`AdminCaStudio.jsx`) with day-wise IST date filtering, topic-grouped Question Review, **Approve All Pending**, inline Question Editor, Manual Question Selection, strict no-reuse tracking (`used_in_set_ids`), and trusted RSS fetch pipeline (`caAutomationService.js`, `caStudioAdmin.js`).
+- **HHK-Branded A4 PDF Exports (`caPdfGeneratorService.js`)**: Pure Node.js PDF 1.4 generator embedding `client/public/hhk-logo.png` natively across 4 formats (`questions_only`, `answer_key`, `detailed_solutions`, `complete_booklet`).
 
-* **HHK-Branded A4 PDF Exports (`caPdfGeneratorService.js`)**: Pure Node.js PDF 1.4 generator embedding `client/public/hhk-logo.png` natively across 4 formats (`questions_only`, `answer_key`, `detailed_solutions`, `complete_booklet`).
+### 6. AI-Based Reading Comprehension & Atomic 5-Question Sets
+- **Full Reading Comprehension AI Engine (`033_reading_comprehension_ai_module.sql`, `rcAiEngineService.js`, `readingComprehensionAdmin.js`)**: Covers all 15 RC categories, 10 banking exam question types, 9 banking examinations, 4 difficulty levels, 3 passage lengths, passage-based vocabulary (English & Tamil meanings), Guided 5-Step Editor, and Admin Practice/Answer PDF downloads (`rcPdfGeneratorService.js`).
+- **Atomic 5-Question Passage Sets**: Enforced as indivisible 5-question sets across Exam-Wise and Topicwise Tests (`assertCompleteRcPassageSets`), integrated into the unified Student CBT exam interface.
 
-### 2. AI-Based Reading Comprehension Question Generator & Atomic 5-Question Sets
+### 7. Exam-Wise & Topicwise Mock Test Management Upgrades
+- **Complete Transactional Delete (`DELETE /api/admin/tests/:id` & `/api/admin/mock-tests/:id`)**: Safe deletion with confirmation modal, `payment_orders` protection, `?force=true` guard for tests with attempts, audit logging, and Question Bank preservation.
+- **Hierarchical Question Bank Picker (`MockTestBuilderView.jsx`, `AdminOverview.jsx`, `server/routes/admin.js`)**: Stage-scoped 2,000-row question loading organized by Section Tabs → Collapsible Topic Groups → Subtopic Groups, with `used_in_sets` filtering, capacity enforcement, and atomic RC Set selection.
 
-* **Full Reading Comprehension AI Engine (`033_reading_comprehension_ai_module.sql`, `rcAiEngineService.js`, `readingComprehensionAdmin.js`)**:
+---
 
-  * Covers all **15 Reading Comprehension categories** (10 Subject + 5 Question-Focused), **10 banking exam question types**, **9 banking examinations**, **4 difficulty levels** (`Easy`, `Moderate`, `Hard`, `Expert`), and **3 passage lengths** (`Short`, `Medium`, `Long`).
+## Core Platform Capabilities
 
-  * Includes **Passage-Based Vocabulary** extraction (English meaning, **Tamil meaning**, synonym, antonym, pronunciation, example sentence, passage context), automated quality validation with auto-regeneration, and a **Guided 5-Step Independent Question Editor**.
+1. **Clean Pure JS/JSX Production Architecture**: React 19 JSX (`client/`), Node.js ES Modules (`server/`), shared syllabus & exam models (`shared/`), SQL migrations (`server/migrations/`), and automated verification suites (`tests/`).
+2. **Master Exam Catalogue (19 Exams Across 5 Categories)**: IBPS (7), SBI (3), RBI (2), NABARD (2), and Other Banks/Institutions (5).
+3. **Complete Banking Syllabus**: 6 subjects and 118 topics with dynamic Exam → Subject → Topic → Subtopic → Difficulty hierarchy.
+4. **Proctored CBT Exam Experience**: Single-tab BroadcastChannel lock, fullscreen enforcement, mouse-only mode, dynamic option shuffling, and local webcam monitor.
+5. **DevTools Security & Code Concealment**: Production Vite builds disable source maps (`sourcemap: false`) and block direct source/config path requests.
+6. **Administrator Role & Access Management**: Dedicated `/admin/users` view with role promotion/demotion, status toggles, self-lockout safeguards, and audit logs.
 
-  * Single-call combined passage + question generation (`generateRcPassageAndQuestionsWithAi`) with fast multi-model failover (`CA_AI_MAX_RETRIES=0` bug fixed in `caAiProvider.js`).
-
-  * Admin **Practice PDF** (no answers) and **Answer & Explanations PDF** downloads (`rcPdfGeneratorService.js`).
-
-* **Integrated into Topicwise Tests (`TopicwiseTestView.jsx`, `server/routes/admin.js`)**: Enabled 1-click AI auto-generation for **English Language → Reading Comprehension** directly inside **Create Topicwise Test** with RC Category and Passage Length selectors.
-
-* **Atomic 5-Question Reading Comprehension Set Rule**: Reading Comprehension passages are generated strictly in **5-question passage sets** (`5, 10, 15, 20, 25, 30 Qs`) and enforced as indivisible sets on both backend (`assertCompleteRcPassageSets`) and frontend (**Exam-Wise Mock Tests** and **Topicwise Tests**)—preventing partial selection of individual questions from a passage.
-
-* **Unified Student Test Flow**: Removed the standalone Student Reading Comprehension sidebar tab and student PDF download links so students attend Reading Comprehension sets inside **Mock tests → Topicwise Tests** using the standard CBT exam interface.
-
-### 3. Exam-Wise & Topicwise Mock Test Management Upgrades
-
-* **Complete Transactional Delete (`DELETE /api/admin/tests/:id` & `/api/admin/mock-tests/:id`)**: Added **Delete** buttons (with confirmation modal) to every Draft and Published **Exam-Wise** (`MockTestBuilderView.jsx`) and **Topicwise** (`TopicwiseTestView.jsx`) test set. Protects `payment_orders` integrity, prompts confirmation for tests with `test_attempts` (`?force=true`), cascades cleanup, logs to `audit_logs`, and keeps all original Question Bank questions intact.
-
-* **Upgraded Exam-Wise Edit & Hierarchical Question Bank Picker (`MockTestBuilderView.jsx`, `AdminOverview.jsx`, `server/routes/admin.js`)**:
-
-  * Extended `GET /api/admin/questions` with `stageId`, `subtopic`, `difficulty`, `used_in_sets`, and a 2,000-row stage limit (fixing the global 500-row truncation).
-
-  * Organized Manual Question Selection by **Section Tabs → Collapsible Topic Groups → Subtopic Groups**, with Topic/Subtopic/Difficulty/Search filters, **Hide questions already used in other sets** toggle, **Show selected only** toggle, blueprint capacity enforcement, and atomic RC Set selection.
-
-  * Cleaned up the **Examination** dropdown in Create Exam Wise Test to display clean exam names without `· published` / `· draft` suffixes, and fixed CSS flex-column scrolling on `.qb-topic-list`.
-
-## What's New: Production Refactoring & Upgrades
-
- 1. **Clean Production-Level Architecture**:
-
-    * Distinct, decoupled layers: `client/` (Frontend SPA), `server/` (Node.js API), `shared/` (shared models/constants), `docs/` (specifications), `scripts/` (build/dev utilities), and `tests/` (integration test suites).
-
- 2. **Pure JavaScript & JSX Transition**:
-
-    * Converted 100% of frontend components from TypeScript to pure React 19 JSX (`.jsx`/`.js`).
-
-    * Converted 100% of backend services and routes to pure Node.js ES Modules (`.js`).
-
-    * Eliminated TypeScript compiler overhead (`tsc`) for instant server startups with native Node.js `--watch`.
-
- 3. **Master Exam Catalogue (19 Exams Across 5 Categories)**:
-
-    * **IBPS**: PO, CSA, SO, RRB PO, RRB Scale II, RRB Scale III, RRB Office Assistant (7)
-
-    * **SBI**: PO, Clerk, SO (3)
-
-    * **RBI**: Grade B, Assistant (2)
-
-    * **NABARD**: Grade A, Grade B (2)
-
-    * **Other Banks / Institutions**: IDBI, SIDBI, ECGC, EXIM, IIFCL (5)
-
- 4. **Question Bank Auto-Mock Sync (20-Question Threshold)**:
-
-    * Once an administrator uploads at least 20 published questions for an exam stage, the platform automatically generates and publishes a full dynamic mock test available to students.
-
- 5. **Dynamic Option Shuffling**:
-
-    * Answer choices (A, B, C, D) are randomly permuted on every student attempt, preventing pattern memorization while tracking the correct answer accurately on the backend.
-
- 6. **Daily 1-Question Challenge**:
-
-    * Daily question selector that tracks consecutive study days (streaks) and unlocks live milestone trophies.
-
- 7. **Proctored CBT Exam Experience**:
-
-    * **Single-Tab Lock**: BroadcastChannel detects duplicate tabs and automatically locks secondary sessions.
-
-    * **Fullscreen Enforcement**: Alerts and auto-submits on repeated escape attempts.
-
-    * **Mouse-Only Mode**: Prevents unauthorized keyboard shortcuts during tests.
-
-    * **Dummy Camera Monitor**: Local webcam mirror providing simulated proctoring without recording or leaking student video.
-
- 8. **DevTools Security & Code Concealment**:
-
-    * Production Vite builds disable source maps (`sourcemap: false`) and block direct DevTools requests to source paths and configuration files.
-
- 9. **Complete Banking Exam Syllabus & Dynamic Topic Dropdowns**:
-
-    * Standardized hierarchy: **Exam → Subject → Topic → Subtopic → Difficulty Level → Questions**.
-
-    * Built-in syllabus module covering 6 banking subjects and 118 topics (Quantitative Aptitude, Reasoning Ability, English Language, General Awareness, Banking & Financial Awareness, Computer Awareness).
-
-    * Dynamic `<select>` dropdowns for topics and subtopics in the Question Bank with custom fallback and topic filtering.
-
-10. **Enhanced Admin Metrics & Topic Drilling**:
-
-* Admin dashboard displays Total Exams, Total Subjects, Total Topics, Total Questions (with Easy / Medium / Hard breakdown), Total Students, and Mock Tests Created.
-
-* Students can select both topics and subtopics for focused practice sessions.
-
-11. **Administrator Role & Access Management**:
-
-* Dedicated "Role management" navigation view in the admin portal (`/admin/users`).
-
-* Summary KPIs: Total Accounts, Administrators, Students, Active Accounts, Disabled Accounts.
-
-* Interactive role filtering (`Admin`, `Student`), status filtering (`Active`, `Disabled`), and search.
-
-* In-place role promotion/demotion (Student ↔ Administrator) and account activation controls.
-
-* Built-in self-protection safeguards preventing accidental administrator self-lockout or self-demotion, backed by audit logging.
+---
 
 ## Directory Structure
 
-```
+```text
 BANKING-PLATFORM/
 ├── client/                               # Frontend Single-Page Application (React 19, pure JSX)
-│   ├── index.html                        # Application HTML entry point
+│   ├── index.html                        # SEO-enhanced HTML entry point + Schema.org JSON-LD
 │   ├── vite.config.js                    # Vite configuration (source blocking, API proxy, CSP)
-│   ├── public/                           # Static brand logos (hhk-logo.png, hik-logo.png)
+│   ├── public/                           # favicon.png, robots.txt, hhk-logo.png, hik-logo.png
 │   └── src/
 │       ├── main.jsx                      # React entry mounting
-│       ├── App.jsx                       # Root routing, toasts, tab lockout listener
+│       ├── App.jsx                       # Root routing, URL sync, toasts, tab lockout listener
 │       ├── AuthPage.jsx                  # Sign-in, sign-up, forgot/reset password
 │       ├── AdminOverview.jsx             # Admin dashboard landing
 │       ├── AdminPanel.jsx                # Full administration portal
@@ -158,83 +100,83 @@ BANKING-PLATFORM/
 │       ├── api/
 │       │   └── client.js                 # Authenticated fetch wrapper
 │       ├── components/
-│       │   ├── common/                   # Field.jsx, ExamOptGroups.jsx
+│       │   ├── common/                   # Field.jsx, FeedbackSystem.jsx
 │       │   ├── auth/                     # AuthBrand, LoginForm, RegisterForm, etc.
-│       │   ├── admin/                    # ExamSetupView, QuestionBankView, MockTestBuilderView, etc.
+│       │   ├── public/                   # PublicPortal, SeoLandingPage, LegalPages, etc.
+│       │   ├── admin/                    # MockTestBuilderView, ExamQuestionSelectionSection, IntelligentExamCreatorPanel, etc.
 │       │   └── student/                  # TestRunner, PracticeRunner, DailyChallengeView, etc.
-│       ├── styles/                       # Modular CSS stylesheets (admin, auth, student, etc.)
+│       ├── styles/                       # Modular CSS stylesheets
 │       └── utils/
 │           ├── examCategories.js         # Master banking category groupings
-│           └── examLock.js               # Single-tab proctoring and fullscreen helpers
+│           ├── examLock.js               # Single-tab proctoring and fullscreen helpers
+│           ├── publicRoutes.js           # Clean URL routing & public SEO landing page definitions
+│           └── seo.js                    # Client-side SPA document.title/meta/canonical sync
 │
 ├── server/                               # Backend API (Node.js ES Modules, pure JS)
-│   ├── index.js                          # Express app, Helmet, session store, static fallback
+│   ├── index.js                          # Express app, Helmet, /robots.txt, /sitemap.xml, SPA meta injection
 │   ├── db.js                             # pg.Pool connection with SSL and timeouts
 │   ├── middleware.js                     # requireAuth, requireAdmin, Zod validator
 │   ├── schemas.js                        # Request/response validation schemas
 │   ├── migrate.js                        # SQL migration runner
 │   ├── seed-admin.js                     # Administrator account bootstrapping
 │   ├── migrations/                       # 001 through 033 SQL migrations
-│   ├── routes/                           # admin.js, attempts.js, auth.js, content.js
-│   └── services/                         # questionBankSync.js, questionSelection.js, milestones.js
+│   ├── exam-engine/                      # examPatternCatalog, subjectGeneratorRegistry, bankQuestionSelector, questionSequencer, intelligentMockTestEngine
+│   ├── question-engine/                  # Core router/formatter/validator + Quant, Reasoning (19/19), English (12/12) generators
+│   ├── routes/                           # admin.js, examEngine.js, attempts.js, auth.js, content.js, public.js, etc.
+│   └── services/                         # questionGenerator.js, questionSelection.js, mockTestValidation.js, seoService.js, etc.
 │
-├── shared/                               # Shared constants & logic between client and server
-│   ├── constants.js                      # EXAM_CATEGORIES list
-│   └── examCategories.js                 # groupExamsByCategory helper
-│
+├── shared/                               # Shared constants, banking syllabus & exam category logic
 ├── docs/
 │   └── ARCHITECTURE.md                   # Complete architectural guide & data flow map
-│
 ├── scripts/
 │   ├── build-web.mjs                     # Production client build runner
 │   └── dev-protected.mjs                 # Protected dev server with hot reload & source blocking
-│
-├── tests/
-│   └── verify_workflow.js                # Integration suite verifying all 6 platform workflows
-│
+├── tests/                                # Automated engine, SEO, sequencing & workflow verification suites
 ├── .env, .env.example, .gitignore
 ├── docker-compose.yml
 └── package.json
-
 ```
+
+---
 
 ## Prerequisites
 
-* **Node.js**: Version 20 or 22+ installed ([nodejs.org](https://nodejs.org/))
+- **Node.js**: Version 20 or 22+ installed ([nodejs.org](https://nodejs.org/))
+- **PostgreSQL**: PostgreSQL 15+ running locally (or via Docker Desktop)
 
-* **PostgreSQL**: PostgreSQL 15+ running locally (or via Docker Desktop)
+---
 
 ## Quick Start & Setup
 
 ### 1. Install Dependencies
 
-```
+```powershell
 npm install
-
 ```
 
 ### 2. Configure Environment (`.env`)
 
 Create your `.env` file from the example template:
 
-```
+```powershell
 Copy-Item .env.example .env
-
 ```
 
 Open `.env` and configure your credentials:
 
-```
+```env
 # Database Configuration
 POSTGRES_PASSWORD=your_postgres_password
 DATABASE_URL=postgresql://postgres:your_postgres_password@localhost:5432/your_database_name
 DATABASE_SSL=false
 
-# Server & Session
+# Server, Session & SEO Site URL
 PORT=3001
 NODE_ENV=development
 SESSION_SECRET=replace-with-at-least-32-random-characters
 APP_URL=http://localhost:5173
+# Optional: set to your live domain in production for robots.txt, sitemap.xml & canonical URLs
+PUBLIC_SITE_URL=
 
 # Admin Account Seeding
 ADMIN_EMAIL=admin@example.com
@@ -257,26 +199,26 @@ SMTP_SECURE=false
 SMTP_USER=
 SMTP_PASSWORD=
 SMTP_FROM=
-
 ```
 
-> \[!NOTE\]
+> [!NOTE]
 > If your database name contains spaces, URL-encode the space as `%20` (e.g. `postgresql://postgres:TIGER@localhost:5432/HHK%20Administrator`).
 
 ### 3. Setup the Database
 
 Apply all SQL migrations and seed the initial administrator:
 
-```
+```powershell
 # Run all 33 database migrations (001 through 033)
 npm run db:migrate
 
 # Seed your default administrator account
 npm run db:seed-admin
-
 ```
 
 *(If using Docker Desktop for PostgreSQL instead of a local install, run `docker compose up -d postgres` before running `npm run db:migrate`)*.
+
+---
 
 ## 🚀 How to Run the Project
 
@@ -284,88 +226,82 @@ npm run db:seed-admin
 
 Starts both the backend Express API server and the Vite React frontend concurrently with live reloading:
 
-```
+```powershell
 npm run dev
-
 ```
 
-| Component | URL | Description | 
-| ----- | ----- | ----- | 
-| **Frontend UI** | <http://localhost:5173> | Vite preview client with DevTools code-protection and `/api` proxy | 
-| **Backend API** | <http://localhost:3001> | Express REST API connected to PostgreSQL with native `node --watch` | 
-
-> \[!NOTE\]
-> Backend changes automatically reload instantly with zero compilation delay. Frontend changes are automatically detected and rebuilt cleanly.
+| Component | URL | Description |
+| :--- | :--- | :--- |
+| **Frontend UI** | [http://localhost:5173](http://localhost:5173) | Vite preview client with DevTools code-protection and `/api` proxy |
+| **Backend API** | [http://localhost:3001](http://localhost:3001) | Express REST API connected to PostgreSQL with native `node --watch` |
 
 ### 2. Running Services in Separate Terminals
 
-If you prefer dedicated terminal sessions for separate log monitoring:
-
 **Terminal 1 — Backend Express Server (Port 3001):**
-
-```
+```powershell
 npm run dev:server
-
 ```
 
 **Terminal 2 — Frontend Client (Port 5173):**
-
-```
+```powershell
 npm run dev:client
-
 ```
 
 ### 3. Production Mode (Single Port 3001)
 
-In production, Express serves both the pre-built, optimized client bundle and all API endpoints on a single port:
+In production, Express serves both the pre-built, optimized client bundle (with dynamic server-side SEO meta injection) and all API endpoints on a single port:
 
-```
-# Step 1: Ensure database schema is migrated
+```powershell
 npm run db:migrate
-
-# Step 2: Compile the frontend into client/dist/ (with sourcemap: false)
 npm run build
-
-# Step 3: Launch the unified production server
 npm start
-
 ```
 
-* **Production App**: <http://localhost:3001>
+- **Production App**: [http://localhost:3001](http://localhost:3001)
+
+---
 
 ## Verification & Testing
 
-The project includes an end-to-end workflow verification script that validates the core business rules inside an isolated, safe rollback transaction (zero test data pollution):
+Run the core integration workflow suite:
 
-```
+```powershell
 npm test
-
 ```
 
-**Verifies:**
+Run the Question Engine, Exam-Wise Selection, Group Sequencing, and SEO verification suites:
 
-1. Master exam categorization logic in `shared/`.
+```powershell
+# Core Question Engine regression audit
+node server/question-engine/tests/auditRefactoringRegression.js
 
-2. PostgreSQL database connectivity.
+# Reasoning (all 19 topics) & English Grammar verification
+node tests/verify_all_reasoning_topics.js
+node tests/verify_grammar_engine.js
 
-3. Master exam count (all 19 exams across all 5 banking categories).
+# Exam-Wise Question Selection (15 official patterns + shortage warnings + 80/80 RRB OA Prelims)
+node tests/verify_exam_wise_question_selection.js
 
-4. Question Bank 20-question threshold auto-mock test creator.
+# Group-Based Consecutive Question Sequencing (DI, Seating, Puzzles, Passages)
+node tests/verify_group_question_sequencing.js
 
-5. Dynamic option shuffler and answer strip validation.
+# Phase 1 & Phase 2 SEO verification (metadata, JSON-LD, robots.txt, sitemap.xml, clean URLs)
+node tests/verify_seo_pack.js
+node tests/verify_seo_landing_pages.js
+```
 
-6. Safe database transaction rollback.
+---
 
 ## Available NPM Scripts
 
-| Command | Description | 
-| ----- | ----- | 
-| `npm run dev` | **Starts both backend API and frontend client concurrently** | 
-| `npm run dev:server` | Starts Express backend in native Node.js `--watch` mode (`port 3001`) | 
-| `npm run dev:client` | Starts Vite protected development client (`port 5173`) | 
-| `npm run build` | Builds optimized client bundle into `client/dist/` (no source maps) | 
-| `npm run preview` | Previews the production client build locally | 
-| `npm start` | Runs the production Express server serving API + static frontend | 
-| `npm run db:migrate` | Applies all pending migrations from `server/migrations/` | 
-| `npm run db:seed-admin` | Bootstraps the administrator account defined in `.env` | 
-| `npm test` | Runs the integration and workflow test suite | 
+| Command | Description |
+| :--- | :--- |
+| `npm run dev` | **Starts both backend API and frontend client concurrently** |
+| `npm run dev:server` | Starts Express backend in native Node.js `--watch` mode (`port 3001`) |
+| `npm run dev:client` | Starts Vite protected development client (`port 5173`) |
+| `npm run build` | Builds optimized client bundle into `client/dist/` (no source maps) |
+| `npm run preview` | Previews the production client build locally |
+| `npm start` | Runs the production Express server serving API + static frontend |
+| `npm run db:migrate` | Applies all pending migrations from `server/migrations/` |
+| `npm run db:seed-admin` | Bootstraps the administrator account defined in `.env` |
+| `npm test` | Runs the integration and workflow test suite |

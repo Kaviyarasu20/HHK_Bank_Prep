@@ -29,6 +29,14 @@ import { gaMarathonAdminRouter } from './routes/gaMarathonAdmin.js';
 import { platformAnalyticsAdminRouter } from './routes/platformAnalyticsAdmin.js';
 import { studentPerformanceRouter } from './routes/studentPerformance.js';
 import { evaluateReadiness, requestCorrelationMiddleware } from './services/requestMonitoring.js';
+import {
+  buildRobotsTxt,
+  buildSitemapXml,
+  injectSeoIntoHtml,
+  loadDynamicSitemapEntries,
+  resolveRouteSeo,
+  resolveSiteOrigin,
+} from './services/seoService.js';
 
 const app = express();
 const port = Number(process.env.PORT ?? 3001);
@@ -222,9 +230,36 @@ app.use((req, res, next) => {
   next();
 });
 
+// 10b. Dynamic SEO endpoints (robots.txt & sitemap.xml)
+app.get('/robots.txt', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.type('text/plain; charset=utf-8').send(buildRobotsTxt(resolveSiteOrigin(req)));
+});
+
+let sitemapCache = { xml: null, origin: null, expiresAt: 0 };
+app.get('/sitemap.xml', async (req, res, next) => {
+  try {
+    const origin = resolveSiteOrigin(req);
+    const now = Date.now();
+    if (!sitemapCache.xml || sitemapCache.origin !== origin || now > sitemapCache.expiresAt) {
+      const dynamicEntries = await loadDynamicSitemapEntries(pool);
+      sitemapCache = {
+        xml: buildSitemapXml(origin, dynamicEntries),
+        origin,
+        expiresAt: now + 5 * 60 * 1000,
+      };
+    }
+    res.setHeader('Cache-Control', 'public, max-age=1800');
+    res.type('application/xml; charset=utf-8').send(sitemapCache.xml);
+  } catch (error) {
+    next(error);
+  }
+});
+
 const clientDist = path.join(projectRoot, 'client', 'dist');
 const rootDist = path.join(projectRoot, 'dist');
 const distPath = fs.existsSync(clientDist) ? clientDist : rootDist;
+let cachedIndexHtml = null;
 
 if (production || fs.existsSync(path.join(distPath, 'index.html'))) {
   app.use(
@@ -240,10 +275,18 @@ if (production || fs.existsSync(path.join(distPath, 'index.html'))) {
   );
   app.use((req, res, next) => {
     if (req.method !== 'GET' || req.path.startsWith('/api/')) return next();
-    res.setHeader('Cache-Control', 'no-store');
-    res.sendFile(path.join(distPath, 'index.html'), error => {
-      if (error) next(error);
-    });
+    try {
+      const indexFilePath = path.join(distPath, 'index.html');
+      if (!cachedIndexHtml || !production) {
+        cachedIndexHtml = fs.readFileSync(indexFilePath, 'utf8');
+      }
+      const seo = resolveRouteSeo(req.path, resolveSiteOrigin(req));
+      const html = injectSeoIntoHtml(cachedIndexHtml, seo);
+      res.setHeader('Cache-Control', 'no-store');
+      res.type('text/html; charset=utf-8').send(html);
+    } catch (error) {
+      next(error);
+    }
   });
 }
 

@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { arrangeSectionQuestionsGrouped } from '../exam-engine/questionSequencer.js';
 
 export function shuffleArray(items) {
   const result = [...items];
@@ -126,7 +127,7 @@ export async function selectNonRepeatingQuestions(client, params) {
     for (const cell of cells) {
       if (!cell.count) continue;
       const matches = await client.query(
-        `SELECT q.id, q.section_id
+        `SELECT q.id, q.section_id, q.topic_name, q.question_text, q.passage_group_id
          FROM questions q
          WHERE q.section_id = $1
            AND q.status = 'published'
@@ -156,7 +157,7 @@ export async function selectNonRepeatingQuestions(client, params) {
     const shortfall = questionCount - sectionPicked.length;
     if (shortfall > 0) {
       const fallback = await client.query(
-        `SELECT q.id, q.section_id
+        `SELECT q.id, q.section_id, q.topic_name, q.question_text, q.passage_group_id
          FROM questions q
          WHERE q.section_id = $1
            AND q.status = 'published'
@@ -184,9 +185,9 @@ export async function selectNonRepeatingQuestions(client, params) {
     }
 
     finalPicked.push(
-      ...(params.shuffleWithinSection
-        ? shuffleArray(sectionPicked)
-        : sectionPicked),
+      ...arrangeSectionQuestionsGrouped(sectionPicked, Math.random, {
+        shuffleBlocks: Boolean(params.shuffleWithinSection),
+      }),
     );
   }
 

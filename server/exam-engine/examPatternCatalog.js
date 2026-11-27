@@ -191,19 +191,47 @@ function quantTopicsMains(totalQ = 40, isPO = false) {
 }
 
 function reasoningTopicsDefault(totalQ = 35, isMains = false) {
-  const puzzleDefault = Math.round(totalQ * (isMains ? 0.50 : 0.43));
-  const syllogismDefault = Math.round(totalQ * 0.12);
-  const ineqDefault = Math.round(totalQ * 0.12);
-  const codingDefault = Math.round(totalQ * 0.12);
-  const miscDefault = totalQ - puzzleDefault - syllogismDefault - ineqDefault - codingDefault;
+  if (isMains) {
+    const puzzleQ = Math.round(totalQ * 0.25);
+    const seatingQ = Math.round(totalQ * 0.20);
+    const inputOutputQ = Math.round(totalQ * 0.12);
+    const logicalQ = Math.round(totalQ * 0.13);
+    const codingQ = Math.round(totalQ * 0.10);
+    const syllogismQ = Math.round(totalQ * 0.08);
+    const ineqQ = Math.round(totalQ * 0.06);
+    const miscQ = Math.max(2, totalQ - puzzleQ - seatingQ - inputOutputQ - logicalQ - codingQ - syllogismQ - ineqQ);
+    const bloodQ = Math.ceil(miscQ / 2);
+    const dirQ = miscQ - bloodQ;
+    return [
+      { topic: "Puzzles", minQuestions: Math.max(5, puzzleQ - 3), maxQuestions: puzzleQ + 5, defaultQuestions: puzzleQ, weight: 25, priority: 1, enabled: true },
+      { topic: "Seating Arrangement", minQuestions: Math.max(5, seatingQ - 3), maxQuestions: seatingQ + 5, defaultQuestions: seatingQ, weight: 20, priority: 1, enabled: true },
+      { topic: "Input-Output", minQuestions: 3, maxQuestions: 6, defaultQuestions: inputOutputQ, weight: 12, priority: 1, enabled: true },
+      { topic: "Logical Reasoning", minQuestions: 3, maxQuestions: 8, defaultQuestions: logicalQ, weight: 13, priority: 1, enabled: true },
+      { topic: "Coding-Decoding", minQuestions: 2, maxQuestions: 6, defaultQuestions: codingQ, weight: 10, priority: 2, enabled: true },
+      { topic: "Syllogism", minQuestions: 2, maxQuestions: 5, defaultQuestions: syllogismQ, weight: 8, priority: 2, enabled: true },
+      { topic: "Inequality", minQuestions: 2, maxQuestions: 5, defaultQuestions: ineqQ, weight: 6, priority: 2, enabled: true },
+      { topic: "Blood Relations", minQuestions: 1, maxQuestions: 4, defaultQuestions: bloodQ, weight: 3, priority: 2, enabled: true },
+      { topic: "Direction & Distance", minQuestions: 1, maxQuestions: 4, defaultQuestions: dirQ, weight: 3, priority: 2, enabled: true },
+    ];
+  }
+  const puzzleQ = Math.round(totalQ * 0.22);
+  const seatingQ = Math.round(totalQ * 0.20);
+  const syllogismQ = Math.round(totalQ * 0.11);
+  const ineqQ = Math.round(totalQ * 0.11);
+  const alphaQ = Math.round(totalQ * 0.12);
+  const codingQ = Math.round(totalQ * 0.10);
+  const miscQ = Math.max(3, totalQ - puzzleQ - seatingQ - syllogismQ - ineqQ - alphaQ - codingQ);
+  const bloodQ = Math.ceil(miscQ / 2);
+  const dirQ = miscQ - bloodQ;
   return [
-    { topic: "Puzzles", minQuestions: Math.max(5, Math.floor(puzzleDefault * 0.5)), maxQuestions: Math.ceil(puzzleDefault * 0.7), defaultQuestions: Math.ceil(puzzleDefault / 2), weight: 25, priority: 1, enabled: true },
-    { topic: "Seating Arrangement", minQuestions: Math.max(5, Math.floor(puzzleDefault * 0.4)), maxQuestions: Math.ceil(puzzleDefault * 0.6), defaultQuestions: Math.floor(puzzleDefault / 2), weight: 22, priority: 1, enabled: true },
-    { topic: "Syllogism", minQuestions: 2, maxQuestions: 5, defaultQuestions: syllogismDefault, weight: 12, priority: 1, enabled: true },
-    { topic: "Inequality", minQuestions: 2, maxQuestions: 5, defaultQuestions: ineqDefault, weight: 12, priority: 1, enabled: true },
-    { topic: "Coding-Decoding", minQuestions: 2, maxQuestions: 6, defaultQuestions: codingDefault, weight: 12, priority: 2, enabled: true },
-    { topic: "Blood Relations", minQuestions: 1, maxQuestions: 4, defaultQuestions: Math.ceil(miscDefault / 2), weight: 9, priority: 2, enabled: true },
-    { topic: "Direction & Distance", minQuestions: 1, maxQuestions: 4, defaultQuestions: Math.floor(miscDefault / 2), weight: 8, priority: 2, enabled: true },
+    { topic: "Puzzles", minQuestions: Math.max(5, puzzleQ - 3), maxQuestions: puzzleQ + 4, defaultQuestions: puzzleQ, weight: 22, priority: 1, enabled: true },
+    { topic: "Seating Arrangement", minQuestions: Math.max(5, seatingQ - 3), maxQuestions: seatingQ + 4, defaultQuestions: seatingQ, weight: 20, priority: 1, enabled: true },
+    { topic: "Syllogism", minQuestions: 2, maxQuestions: 5, defaultQuestions: syllogismQ, weight: 11, priority: 1, enabled: true },
+    { topic: "Inequality", minQuestions: 2, maxQuestions: 5, defaultQuestions: ineqQ, weight: 11, priority: 1, enabled: true },
+    { topic: "Alphanumeric Series", minQuestions: 3, maxQuestions: 6, defaultQuestions: alphaQ, weight: 12, priority: 1, enabled: true },
+    { topic: "Coding-Decoding", minQuestions: 2, maxQuestions: 5, defaultQuestions: codingQ, weight: 10, priority: 2, enabled: true },
+    { topic: "Blood Relations", minQuestions: 1, maxQuestions: 4, defaultQuestions: bloodQ, weight: 7, priority: 2, enabled: true },
+    { topic: "Direction & Distance", minQuestions: 1, maxQuestions: 4, defaultQuestions: dirQ, weight: 7, priority: 2, enabled: true },
   ];
 }
 
@@ -933,6 +961,197 @@ export const EXAM_PATTERN_CATALOG = [
       },
     ],
   },
+
+  // =========================================================================
+  // 7. RBI Assistant (Prelims & Mains)
+  // =========================================================================
+  {
+    patternCode: "RBI-ASSISTANT-PRELIMS",
+    examCode: "RBI-ASSISTANT",
+    examName: "RBI Assistant",
+    stageName: "Prelims",
+    totalQuestions: 100,
+    totalMarks: 100,
+    durationSeconds: 60 * 60,
+    sectionalTimingEnabled: true,
+    negativeMarkingRatio: 0.25,
+    optionCount: 5,
+    shortagePolicy: "FAIL_STRICT",
+    repetitionPolicy: DEFAULT_REPETITION_POLICY,
+    sourceNotes: "Official RBI Assistant Prelims pattern (100 Qs, 100 marks, 60 min with 20 min sectional timers, 0.25 negative marking). Topic distributions reflect historical exam trends.",
+    sections: [
+      {
+        sectionName: "English Language",
+        subjectKey: "english",
+        questionCount: 30,
+        marksPerQuestion: 1,
+        negativeMarks: 0.25,
+        durationSeconds: 20 * 60,
+        sortOrder: 0,
+        difficultyDistribution: { easy: 45, medium: 45, hard: 10 },
+        topicDistributions: englishTopicsDefault(30),
+      },
+      {
+        sectionName: "Numerical Ability",
+        subjectKey: "quant",
+        questionCount: 35,
+        marksPerQuestion: 1,
+        negativeMarks: 0.25,
+        durationSeconds: 20 * 60,
+        sortOrder: 1,
+        difficultyDistribution: { easy: 45, medium: 45, hard: 10 },
+        topicDistributions: quantTopicsClerkPrelims(35),
+      },
+      {
+        sectionName: "Reasoning Ability",
+        subjectKey: "reasoning",
+        questionCount: 35,
+        marksPerQuestion: 1,
+        negativeMarks: 0.25,
+        durationSeconds: 20 * 60,
+        sortOrder: 2,
+        difficultyDistribution: { easy: 45, medium: 45, hard: 10 },
+        topicDistributions: reasoningTopicsDefault(35, false),
+      },
+    ],
+  },
+  {
+    patternCode: "RBI-ASSISTANT-MAINS",
+    examCode: "RBI-ASSISTANT",
+    examName: "RBI Assistant",
+    stageName: "Mains",
+    totalQuestions: 200,
+    totalMarks: 200,
+    durationSeconds: 135 * 60,
+    sectionalTimingEnabled: true,
+    negativeMarkingRatio: 0.25,
+    optionCount: 5,
+    shortagePolicy: "FAIL_STRICT",
+    repetitionPolicy: DEFAULT_REPETITION_POLICY,
+    sourceNotes: "Official RBI Assistant Mains pattern (200 Qs, 200 marks, 135 min across 5 sections of 40 Qs each, 0.25 negative marking).",
+    sections: [
+      {
+        sectionName: "Reasoning Ability",
+        subjectKey: "reasoning",
+        questionCount: 40,
+        marksPerQuestion: 1,
+        negativeMarks: 0.25,
+        durationSeconds: 30 * 60,
+        sortOrder: 0,
+        difficultyDistribution: { easy: 20, medium: 55, hard: 25 },
+        topicDistributions: reasoningTopicsDefault(40, true),
+      },
+      {
+        sectionName: "English Language",
+        subjectKey: "english",
+        questionCount: 40,
+        marksPerQuestion: 1,
+        negativeMarks: 0.25,
+        durationSeconds: 30 * 60,
+        sortOrder: 1,
+        difficultyDistribution: { easy: 25, medium: 55, hard: 20 },
+        topicDistributions: englishTopicsDefault(40),
+      },
+      {
+        sectionName: "Numerical Ability",
+        subjectKey: "quant",
+        questionCount: 40,
+        marksPerQuestion: 1,
+        negativeMarks: 0.25,
+        durationSeconds: 30 * 60,
+        sortOrder: 2,
+        difficultyDistribution: { easy: 20, medium: 55, hard: 25 },
+        topicDistributions: quantTopicsMains(40, false),
+      },
+      {
+        sectionName: "General Awareness",
+        subjectKey: "general_awareness",
+        questionCount: 40,
+        marksPerQuestion: 1,
+        negativeMarks: 0.25,
+        durationSeconds: 25 * 60,
+        sortOrder: 3,
+        difficultyDistribution: { easy: 25, medium: 50, hard: 25 },
+        topicDistributions: gaTopicsDefault(40),
+      },
+      {
+        sectionName: "Computer Knowledge",
+        subjectKey: "computer_knowledge",
+        questionCount: 40,
+        marksPerQuestion: 1,
+        negativeMarks: 0.25,
+        durationSeconds: 20 * 60,
+        sortOrder: 4,
+        difficultyDistribution: { easy: 35, medium: 50, hard: 15 },
+        topicDistributions: computerTopicsDefault(40),
+      },
+    ],
+  },
+
+  // =========================================================================
+  // 8. RBI Grade B (Phase 1 / Prelims)
+  // =========================================================================
+  {
+    patternCode: "RBI-GRADE-B-PRELIMS",
+    examCode: "RBI-GRADE-B",
+    examName: "RBI Grade B",
+    stageName: "Prelims",
+    totalQuestions: 200,
+    totalMarks: 200,
+    durationSeconds: 120 * 60,
+    sectionalTimingEnabled: true,
+    negativeMarkingRatio: 0.25,
+    optionCount: 5,
+    shortagePolicy: "FAIL_STRICT",
+    repetitionPolicy: DEFAULT_REPETITION_POLICY,
+    sourceNotes: "Official RBI Grade B Phase 1 pattern (200 Qs, 200 marks, 120 min: GA 80/25m, Reasoning 60/45m, English 30/25m, Quant 30/25m, 0.25 negative marking).",
+    sections: [
+      {
+        sectionName: "General Awareness",
+        subjectKey: "general_awareness",
+        questionCount: 80,
+        marksPerQuestion: 1,
+        negativeMarks: 0.25,
+        durationSeconds: 25 * 60,
+        sortOrder: 0,
+        difficultyDistribution: { easy: 15, medium: 50, hard: 35 },
+        topicDistributions: gaTopicsDefault(80),
+      },
+      {
+        sectionName: "Reasoning Ability",
+        subjectKey: "reasoning",
+        questionCount: 60,
+        marksPerQuestion: 1,
+        negativeMarks: 0.25,
+        durationSeconds: 45 * 60,
+        sortOrder: 1,
+        difficultyDistribution: { easy: 10, medium: 40, hard: 50 },
+        topicDistributions: reasoningTopicsDefault(60, true),
+      },
+      {
+        sectionName: "English Language",
+        subjectKey: "english",
+        questionCount: 30,
+        marksPerQuestion: 1,
+        negativeMarks: 0.25,
+        durationSeconds: 25 * 60,
+        sortOrder: 2,
+        difficultyDistribution: { easy: 15, medium: 50, hard: 35 },
+        topicDistributions: englishTopicsDefault(30),
+      },
+      {
+        sectionName: "Quantitative Aptitude",
+        subjectKey: "quant",
+        questionCount: 30,
+        marksPerQuestion: 1,
+        negativeMarks: 0.25,
+        durationSeconds: 25 * 60,
+        sortOrder: 3,
+        difficultyDistribution: { easy: 10, medium: 40, hard: 50 },
+        topicDistributions: quantTopicsMains(30, true),
+      },
+    ],
+  },
 ];
 
 /**
@@ -962,6 +1181,10 @@ export function findCatalogPattern(examCode = "", stageName = "Prelims") {
     canonicalCode = "SBI-PO";
   } else if (code.includes("CLERK") || code.includes("CSA")) {
     canonicalCode = "IBPS-CSA";
+  } else if (code.includes("RBI") && code.includes("ASSISTANT")) {
+    canonicalCode = "RBI-ASSISTANT";
+  } else if (code.includes("RBI")) {
+    canonicalCode = "RBI-GRADE-B";
   } else if (code.includes("IBPS") && code.includes("PO")) {
     canonicalCode = "IBPS-PO";
   }
@@ -977,26 +1200,62 @@ export function findCatalogPattern(examCode = "", stageName = "Prelims") {
  */
 export function inferSubjectKeyFromSectionName(sectionName = "") {
   const s = String(sectionName || "").toLowerCase();
+  // Check explicit non-quant subjects first so "Reasoning & Computer Aptitude" maps to reasoning
+  if (s.includes("reason") || s.includes("logic")) {
+    return "reasoning";
+  }
   if (
     s.includes("quant") ||
     s.includes("numerical") ||
     s.includes("data analysis") ||
     s.includes("data interpretation") ||
-    s.includes("math")
+    s.includes("math") ||
+    s.includes("arithmetic") ||
+    (s.includes("aptitude") && !s.includes("computer"))
   ) {
     return "quant";
   }
-  if (s.includes("reason") || s.includes("logic")) {
-    return "reasoning";
-  }
-  if (s.includes("english") || s.includes("verbal")) {
+  if (s.includes("english") || s.includes("verbal") || s.includes("language")) {
     return "english";
   }
   if (s.includes("computer")) {
     return "computer_knowledge";
   }
-  if (s.includes("awareness") || s.includes("current affairs") || s.includes("economy") || s.includes("banking")) {
+  if (
+    s.includes("awareness") ||
+    s.includes("current affairs") ||
+    s.includes("economy") ||
+    s.includes("banking") ||
+    s.includes("financial") ||
+    s.includes("gk") ||
+    s.includes("general knowledge")
+  ) {
     return "general_awareness";
   }
   return "general";
+}
+
+/**
+ * Generates research-based default topic distributions for any subjectKey + questionCount,
+ * used as fallback when an exam or custom section isn't explicitly matched in EXAM_PATTERN_CATALOG.
+ */
+export function getDefaultTopicDistributionsForSubject(subjectKey = "", questionCount = 35, isMains = false) {
+  const q = Math.max(1, Number(questionCount || 35));
+  const key = String(subjectKey || "").toLowerCase();
+  if (key === "quant") {
+    return isMains ? quantTopicsMains(q, false) : quantTopicsClerkPrelims(q);
+  }
+  if (key === "reasoning") {
+    return reasoningTopicsDefault(q, isMains);
+  }
+  if (key === "english") {
+    return englishTopicsDefault(q);
+  }
+  if (key === "general_awareness") {
+    return gaTopicsDefault(q);
+  }
+  if (key === "computer_knowledge") {
+    return computerTopicsDefault(q);
+  }
+  return [];
 }

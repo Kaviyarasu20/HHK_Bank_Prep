@@ -39,6 +39,8 @@ const AdminOverview = lazy(() => import("./AdminOverview"));
 const AuthPage = lazy(() => import("./AuthPage"));
 const StudentWorkspace = lazy(() => import("./StudentWorkspace"));
 import { PublicPortal } from "./components/public/PublicPortal";
+import { resolvePublicPageFromPath } from "./utils/publicRoutes";
+import { updatePageSeo } from "./utils/seo";
 import { TermsPage, PrivacyPage, RefundPolicyPage, ContactSupportPage } from "./components/public/LegalPages";
 import { savePendingTestRedirect, getPendingTestRedirect, clearPendingTestRedirect } from "./utils/paymentHelpers";
 
@@ -69,6 +71,7 @@ const adminPages = [
   ["Question bank", BookOpen],
   ["__MOCK_TEST_ACCORDION__", Target],
   ["Current affairs", CalendarDays],
+  ["Reading comprehension", BookOpen],
   ["Payments & Pricing", CreditCard],
   ["Role management", UserCheck],
   ["Reports", ShieldCheck],
@@ -100,7 +103,7 @@ function AppShell() {
   const [lockedOutInfo, setLockedOutInfo] = useState(null); // Proctoring lockdown for duplicate browser tabs
   const [showAuth, setShowAuth] = useState(() => Boolean(new URLSearchParams(window.location.search).get("reset")));
   const [authMode, setAuthMode] = useState("login");
-  const [publicPage, setPublicPage] = useState("home");
+  const [publicPage, setPublicPage] = useState(() => resolvePublicPageFromPath(window.location.pathname));
   const [redirectTest, setRedirectTest] = useState(null);
   const [autoOpenTestId, setAutoOpenTestId] = useState("");
   const [legalModalPage, setLegalModalPage] = useState("");
@@ -113,6 +116,15 @@ function AppShell() {
   // Security: Single-Tab Lockdown Subscription (BroadcastChannel)
   // --------------------------------------------------------------------------
   useEffect(() => subscribeCompanionTabLock(setLockedOutInfo), []);
+  useEffect(() => {
+    if (user) {
+      updatePageSeo({
+        title: `${active} | HHK Workspace`,
+        description: "HHK Banking Exam Preparation Workspace",
+        noindex: true,
+      });
+    }
+  }, [user, active]);
   useEffect(() => {
     fetch("/api/public/config").then((r) => (r.ok ? r.json() : null)).then((d) => setPublicConfig(d?.config ?? null)).catch(() => {});
   }, []);

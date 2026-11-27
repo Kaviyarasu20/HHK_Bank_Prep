@@ -186,10 +186,9 @@ export async function getExamWiseBlueprintProgress(
     (sum, s) => sum + (s.durationSeconds ?? 0),
     0
   );
+  const allSectionalTimersPresent = sections.every((s) => s.durationSeconds !== null && s.durationSeconds > 0);
   const sectionalTimersValid =
-    !hasSectionalTimers ||
-    (sections.every((s) => s.durationSeconds !== null) &&
-      sectionalTimerSum === Number(durationSeconds));
+    !hasSectionalTimers || (allSectionalTimersPresent && sectionalTimerSum > 0);
 
   const sectionsComplete =
     sections.length > 0 && sections.every((s) => s.complete);
@@ -380,9 +379,22 @@ export async function validateTestForPublish(clientOrPool, testId) {
       ok: false,
       statusCode: 400,
       error:
-        "Cannot publish: configure a sectional duration for every section so their total matches the mock test duration.",
+        "Cannot publish: configure a sectional duration for every section in Exam setup.",
       details: { testType: "EXAM_WISE", progress },
     };
+  }
+
+  // Guarantee mock_tests.duration_seconds can never mismatch its sectional timer sum
+  if (
+    progress.hasSectionalTimers &&
+    progress.sectionalTimerSum > 0 &&
+    Number(test.duration_seconds) !== progress.sectionalTimerSum
+  ) {
+    await clientOrPool.query(
+      "UPDATE mock_tests SET duration_seconds = $1, updated_at = NOW() WHERE id = $2",
+      [progress.sectionalTimerSum, test.id]
+    );
+    test.duration_seconds = progress.sectionalTimerSum;
   }
 
   return { ok: true, test, progress };

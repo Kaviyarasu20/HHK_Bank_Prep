@@ -1171,7 +1171,9 @@ adminRouter.get("/questions/generate/topics", (_req, res) => {
   res.json({
     supportedTopics: {
       ...SUPPORTED_AUTO_TOPICS,
-      english: ["Reading Comprehension"],
+      english: Array.from(
+        new Set(["Reading Comprehension", ...(SUPPORTED_AUTO_TOPICS.english || [])])
+      ),
     },
     rcCategories: RC_ALL_CATEGORIES,
   });
@@ -1194,14 +1196,79 @@ adminRouter.post("/questions/generate", async (req, res) => {
   }
   const section = sectionRes.rows[0];
 
-  const generated = generateTopicQuestions({
-    examCode: section.exam_code,
-    stageName: section.stage_name,
-    topicName: input.topicName,
-    subtopicName: input.subtopicName,
-    difficulty: input.difficulty,
-    count: input.count,
-  });
+  let generated;
+  if (isReadingComprehensionTopic(input.topicName)) {
+    const RC_SET_SIZE = 5;
+    if (input.count < RC_SET_SIZE || input.count % RC_SET_SIZE !== 0) {
+      return res.status(400).json({
+        error: `Reading Comprehension must be generated in complete 5-question passage sets (5, 10, 15, 20, 25, or 30 questions). Requested: ${input.count}.`,
+      });
+    }
+    const requestedRcCategory = String(req.body?.rcCategory || input.subtopicName || "").trim();
+    const passageLength = ["short", "medium", "long"].includes(String(req.body?.passageLength || "").toLowerCase())
+      ? String(req.body.passageLength).toLowerCase()
+      : "medium";
+    const rcDifficulty = input.difficulty === "medium" ? "moderate" : input.difficulty;
+    const passageCount = input.count / RC_SET_SIZE;
+    const passageSets = [];
+    const generatedTitles = [];
+
+    for (let pIdx = 0; pIdx < passageCount; pIdx += 1) {
+      const chosenCategory =
+        requestedRcCategory && RC_ALL_CATEGORIES.includes(requestedRcCategory)
+          ? requestedRcCategory
+          : RC_SUBJECT_CATEGORIES[pIdx % RC_SUBJECT_CATEGORIES.length];
+
+      const combined = await generateRcPassageAndQuestionsWithAi({
+        examination: section.exam_name || section.exam_code || "IBPS PO",
+        category: chosenCategory,
+        difficulty: rcDifficulty,
+        passageLength,
+        questionsPerPassage: RC_SET_SIZE,
+        questionTypes: [],
+        optionCount: 5,
+        includeExplanations: true,
+        includeVocabulary: false,
+        avoidTitles: generatedTitles,
+      });
+      generatedTitles.push(combined.passage.title);
+
+      passageSets.push({
+        passage: {
+          title: combined.passage.title,
+          passageText: combined.passage.passage_text,
+        },
+        questions: combined.questions.map((q) => ({
+          topicName: input.topicName,
+          subtopicName: q.question_type || chosenCategory,
+          difficulty: input.difficulty,
+          questionText: q.question_text,
+          options: q.options,
+          correctAnswer: q.correct_answer,
+          explanation: q.passage_reference
+            ? `${q.explanation} (Passage Reference: "${q.passage_reference}")`
+            : q.explanation,
+        })),
+      });
+    }
+
+    generated = {
+      mode: "passage_sets",
+      engine: "HHK_GEMINI_RC_AI",
+      passageSets,
+      standaloneQuestions: [],
+      totalQuestions: passageSets.reduce((acc, s) => acc + s.questions.length, 0),
+    };
+  } else {
+    generated = generateTopicQuestions({
+      examCode: section.exam_code,
+      stageName: section.stage_name,
+      topicName: input.topicName,
+      subtopicName: input.subtopicName,
+      difficulty: input.difficulty,
+      count: input.count,
+    });
+  }
 
   if (input.previewOnly) {
     return res.json({

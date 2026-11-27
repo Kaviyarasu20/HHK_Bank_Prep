@@ -144,9 +144,23 @@ function AdminPanel({ section, onToast, onNavigate, onConfirmModal, onAlert }) {
       .toLowerCase()
       .includes(filter.toLowerCase()),
   );
-  async function loadExams() {
+  async function loadExams(preserveExamId = null, preserveStageName = null) {
     const result = await api("/exams");
-    setExams(result.exams);
+    const list = result.exams ?? [];
+    setExams(list);
+    if (preserveExamId) {
+      const nextIdx = list.findIndex((x) => x.id === preserveExamId);
+      if (nextIdx >= 0) {
+        setExamIndex(nextIdx);
+        if (preserveStageName) {
+          const nextStageIdx = (list[nextIdx].stages ?? []).findIndex(
+            (s) => s.name === preserveStageName,
+          );
+          setStageIndex(nextStageIdx >= 0 ? nextStageIdx : 0);
+        }
+      }
+    }
+    return list;
   }
   async function loadQuestions() {
     const result = await api("/admin/questions");
@@ -183,9 +197,11 @@ function AdminPanel({ section, onToast, onNavigate, onConfirmModal, onAlert }) {
     };
   }, [form.questionType, form.sectionId]);
   function updateExam(mutator) {
+    const activeId = exam?.id;
+    if (!activeId) return;
     setExams((current) =>
-      current.map((item, index) =>
-        index === examIndex ? mutator(item) : item,
+      current.map((item) =>
+        item.id === activeId ? mutator(item) : item,
       ),
     );
   }
@@ -212,7 +228,12 @@ function AdminPanel({ section, onToast, onNavigate, onConfirmModal, onAlert }) {
                 ix === i
                   ? {
                       ...item,
-                      [field]: field === "name" ? value : Number(value),
+                      [field]:
+                        field === "name"
+                          ? value
+                          : field === "duration_seconds" && value === ""
+                            ? null
+                            : Number(value),
                     }
                   : item,
               ),
@@ -300,12 +321,15 @@ function AdminPanel({ section, onToast, onNavigate, onConfirmModal, onAlert }) {
           })),
         })),
       };
-      await api(`/admin/exams/${exam.id}`, {
+      const savedExamId = exam.id;
+      const savedExamName = exam.name;
+      const savedStageName = stage?.name ?? null;
+      await api(`/admin/exams/${savedExamId}`, {
         method: "PUT",
         body: JSON.stringify(payload),
       });
-      await loadExams();
-      onToast("Exam pattern saved to PostgreSQL.");
+      await loadExams(savedExamId, savedStageName);
+      onToast(`Saved pattern for ${savedExamName}.`);
     } catch (e) {
       setError(e.message);
     } finally {

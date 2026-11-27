@@ -14,14 +14,13 @@
  *
  * IMPORTANT:
  * Only real, functional generators are registered as ACTIVE.
- * Future generators (Reasoning, English, GA, Computer Knowledge) can be plugged in
- * via registerSubjectGenerator() without changing the core exam-wise engine.
+ * Quantitative Aptitude (20 topics), Reasoning Ability (19 topics), and
+ * English Language (12 modular topics) are all ACTIVE via HHK Question Engine V2.
  */
 
 import crypto from "node:crypto";
 import { generateFromQuestionEngine } from "../question-engine/core/engineRouter.js";
 import { SUPPORTED_AUTO_TOPICS, isEngineSupportedTopic } from "../services/questionGenerator.js";
-
 
 function ensureBankingOptionCount(item, targetOptionCount = 5) {
   if (!Array.isArray(item?.options) || !targetOptionCount) return item;
@@ -57,26 +56,52 @@ function computeQuestionFingerprint(q) {
 }
 
 /**
- * Standard adapter wrapping the existing functional Quantitative Aptitude Question Engine.
+ * Shared adapter factory wrapping HHK Modular Question Engine V2 subjects
+ * (Quantitative Aptitude, Reasoning Ability, and English Language).
  */
-function createQuantitativeAptitudeGenerator() {
-  const supportedTopics = [...(SUPPORTED_AUTO_TOPICS.quant || [])];
+function createModularEngineSubjectGenerator({
+  subjectKey,
+  displayName,
+  supportedTopics,
+  version = "2.0.0",
+  engineTag,
+  notes,
+}) {
+  const normalizedSupported = new Set(
+    (supportedTopics || []).map((t) => String(t).trim().toLowerCase())
+  );
+
+  const supportsTopicLocal = (topicName = "") => {
+    const clean = String(topicName || "").trim().toLowerCase();
+    if (!clean) return false;
+    if (normalizedSupported.has(clean)) return true;
+    // Also check canonical engine matchers for aliases (e.g. "Puzzles & Seating Arrangements", "Direction and Distance")
+    if (subjectKey === "reasoning") {
+      return isEngineSupportedTopic(clean) && !SUPPORTED_AUTO_TOPICS.quant.some((q) => q.toLowerCase() === clean);
+    }
+    if (subjectKey === "english") {
+      // Reading Comprehension uses the separate Gemini AI service, not procedural engineRouter
+      if (clean.includes("reading comprehension")) return false;
+      return isEngineSupportedTopic(clean);
+    }
+    return isEngineSupportedTopic(clean);
+  };
 
   return {
-    subjectKey: "quant",
-    displayName: "Quantitative Aptitude",
+    subjectKey,
+    displayName,
     status: "ACTIVE",
-    version: "2.0.0",
-    supportedTopics,
-    notes: "Backed by HHK Modular Quantitative Aptitude Question Engine (20 verified topic modules).",
+    version,
+    supportedTopics: [...supportedTopics],
+    notes,
 
     supportsTopic(topicName = "") {
-      return isEngineSupportedTopic(topicName);
+      return supportsTopicLocal(topicName);
     },
 
     getAvailableCount({ topic = "" } = {}) {
       if (!topic) return Number.POSITIVE_INFINITY;
-      return isEngineSupportedTopic(topic) ? Number.POSITIVE_INFINITY : 0;
+      return supportsTopicLocal(topic) ? Number.POSITIVE_INFINITY : 0;
     },
 
     generateQuestions({
@@ -89,15 +114,15 @@ function createQuantitativeAptitudeGenerator() {
       optionCount = 5,
       excludeFingerprints = [],
     }) {
-      if (!isEngineSupportedTopic(topic)) {
+      if (!supportsTopicLocal(topic)) {
         return {
           questions: [],
           metadata: {
-            subjectKey: "quant",
+            subjectKey,
             topic,
             requested: count,
             generated: 0,
-            error: `Topic "${topic}" is not supported by the Quantitative Aptitude generator.`,
+            error: `Topic "${topic}" is not supported by the ${displayName} procedural generator.`,
           },
         };
       }
@@ -108,7 +133,6 @@ function createQuantitativeAptitudeGenerator() {
       let remaining = count;
 
       for (let round = 0; round < maxRounds && remaining > 0; round++) {
-        // Request a small buffer when filtering duplicates
         const batchSize = round === 0 ? remaining : Math.min(remaining * 2, remaining + 6);
         const rawBatch = generateFromQuestionEngine({
           examCode,
@@ -128,13 +152,13 @@ function createQuantitativeAptitudeGenerator() {
           excludeSet.add(fingerprint);
           collected.push({
             ...item,
-            subjectKey: "quant",
+            subjectKey,
             topicName: item.topicName || topic,
             subtopicName: item.subtopicName || subtopic || "",
             difficulty: String(item.difficulty || difficulty || "medium").toLowerCase(),
             fingerprint,
-            generatorVersion: "2.0.0",
-            generatorSource: "HHK_QUANT_ENGINE_V2",
+            generatorVersion: version,
+            generatorSource: engineTag,
           });
         }
         remaining = count - collected.length;
@@ -143,13 +167,13 @@ function createQuantitativeAptitudeGenerator() {
       return {
         questions: collected,
         metadata: {
-          subjectKey: "quant",
+          subjectKey,
           topic,
           subtopic,
           difficulty,
           requested: count,
           generated: collected.length,
-          engine: "HHK_QUANT_ENGINE_V2",
+          engine: engineTag,
         },
       };
     },
@@ -168,7 +192,7 @@ function createUnavailableSubjectDescriptor(subjectKey, displayName, plannedTopi
     version: "0.0.0",
     supportedTopics: [],
     plannedTopics,
-    notes: `${displayName} generator is not yet implemented. Register a functional adapter via registerSubjectGenerator() once built.`,
+    notes: `${displayName} procedural generator is not yet built. Use Question Bank selection for these topics.`,
     supportsTopic() {
       return false;
     },
@@ -199,29 +223,44 @@ class SubjectGeneratorRegistry {
 
   resetDefaults() {
     this._registry.clear();
-    // Register functional Quantitative Aptitude generator
-    this.register(createQuantitativeAptitudeGenerator());
-    // Register honest UNAVAILABLE placeholders for future subjects (zero fake generation)
+
+    // 1. Quantitative Aptitude — ACTIVE
     this.register(
-      createUnavailableSubjectDescriptor("reasoning", "Reasoning Ability", [
-        "Puzzles",
-        "Seating Arrangement",
-        "Syllogism",
-        "Inequality",
-        "Coding-Decoding",
-        "Blood Relations",
-        "Direction & Distance",
-      ])
+      createModularEngineSubjectGenerator({
+        subjectKey: "quant",
+        displayName: "Quantitative Aptitude",
+        supportedTopics: SUPPORTED_AUTO_TOPICS.quant || [],
+        version: "2.0.0",
+        engineTag: "HHK_QUANT_ENGINE_V2",
+        notes: "Backed by HHK Modular Quantitative Aptitude Question Engine.",
+      })
     );
+
+    // 2. Reasoning Ability — ACTIVE (all 19 verified banking reasoning topics)
     this.register(
-      createUnavailableSubjectDescriptor("english", "English Language", [
-        "Reading Comprehension",
-        "Cloze Test",
-        "Error Detection",
-        "Para Jumbles",
-        "Fill in the Blanks",
-      ])
+      createModularEngineSubjectGenerator({
+        subjectKey: "reasoning",
+        displayName: "Reasoning Ability",
+        supportedTopics: SUPPORTED_AUTO_TOPICS.reasoning || [],
+        version: "2.0.0",
+        engineTag: "HHK_REASONING_ENGINE_V2",
+        notes: "Backed by HHK Modular Reasoning Ability Question Engine (19 verified topics).",
+      })
     );
+
+    // 3. English Language — ACTIVE (all 12 modular English topics; RC handled via Gemini AI)
+    this.register(
+      createModularEngineSubjectGenerator({
+        subjectKey: "english",
+        displayName: "English Language",
+        supportedTopics: SUPPORTED_AUTO_TOPICS.english || [],
+        version: "2.0.0",
+        engineTag: "HHK_ENGLISH_ENGINE_V2",
+        notes: "Backed by HHK Modular English Language Question Engine (12 verified topics; Reading Comprehension via Gemini AI).",
+      })
+    );
+
+    // 4. General Awareness & Computer Knowledge — Question Bank backed until procedural engines are built
     this.register(
       createUnavailableSubjectDescriptor("general_awareness", "General Awareness", [
         "Current Affairs",
@@ -240,10 +279,6 @@ class SubjectGeneratorRegistry {
     );
   }
 
-  /**
-   * Validates and registers a subject generator adapter dynamically.
-   * Future generators (Reasoning, English, etc.) plug in here without changing the exam engine.
-   */
   register(adapter) {
     if (!adapter || typeof adapter !== "object") {
       throw new Error("Subject generator adapter must be an object.");

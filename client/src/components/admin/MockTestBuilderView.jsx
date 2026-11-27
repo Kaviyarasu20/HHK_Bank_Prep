@@ -13,6 +13,7 @@ import {
 import { Field } from "../common/Field";
 import { RuleBasedSelector } from "./RuleBasedSelector";
 import { IntelligentExamCreatorPanel } from "./IntelligentExamCreatorPanel";
+import { ExamQuestionSelectionSection } from "./ExamQuestionSelectionSection";
 import { ExamOptGroups } from "../../utils/examCategories";
 
 function buildTestNameGroups(selectedExam, stage, tests, setLabel = "Set 1") {
@@ -670,12 +671,24 @@ function MockTestBuilderView({
             </div>
 
             {!editingTestId && (
-              <IntelligentExamCreatorPanel
-                exams={exams}
-                examId={examId}
-                stageId={stageId}
-                onTestCreated={() => onResetTestBuilder?.()}
-              />
+              <>
+                <ExamQuestionSelectionSection
+                  exams={exams}
+                  examId={examId}
+                  stageId={stageId}
+                  testName={testName}
+                  setLabel={setLabel}
+                  reviewPolicy={reviewPolicy}
+                  onDurationSync={(mins) => onSetDuration?.(mins)}
+                  onTestCreated={() => onResetTestBuilder?.()}
+                />
+                <IntelligentExamCreatorPanel
+                  exams={exams}
+                  examId={examId}
+                  stageId={stageId}
+                  onTestCreated={() => onResetTestBuilder?.()}
+                />
+              </>
             )}
 
             {/* Live Exam Blueprint Checklist */}
@@ -1208,9 +1221,14 @@ function MockTestBuilderView({
                 const totalReq = bp?.totalRequired ?? Number(t.target_questions || 0);
                 const totalPub = bp?.totalPublished ?? Number(t.published_question_count ?? t.question_count ?? 0);
                 const isReady = Boolean(t.ready_to_publish);
+                const timerMismatch = Boolean(bp && bp.sectionsComplete && !bp.sectionalTimersValid);
+                const secSumMins = bp?.sectionalTimerSum ? Math.round(bp.sectionalTimerSum / 60) : 0;
+                const testMins = Math.round((t.duration_seconds || 0) / 60);
                 const blockReason = !isReady
                   ? t.exam_status !== "published"
-                    ? "Publish parent examination first"
+                    ? "Publish parent examination in Exam setup first"
+                    : timerMismatch
+                    ? `Duration mismatch: test is ${testMins} min, section timers sum to ${secSumMins} min (Edit test duration or fix section timers in Exam setup)`
                     : `${totalPub}/${totalReq} questions added — complete all sections before publishing`
                   : "";
 
@@ -1239,10 +1257,17 @@ function MockTestBuilderView({
                         </span>
                         {bp?.sections?.length > 0 && !bp.isComplete && (
                           <div className="table-blueprint-missing">
-                            {bp.sections
-                              .filter((s) => !s.complete)
-                              .map((s) => `${s.sectionName}: ${s.published}/${s.required}`)
-                              .join(" · ")}
+                            {timerMismatch
+                              ? `Timer mismatch: test ${testMins}m vs sections ${secSumMins}m`
+                              : bp.sections
+                                  .filter((s) => !s.complete)
+                                  .map((s) => `${s.sectionName}: ${s.published}/${s.required}`)
+                                  .join(" · ")}
+                          </div>
+                        )}
+                        {!isReady && t.exam_status !== "published" && (
+                          <div className="table-blueprint-missing">
+                            Publish parent exam in Exam setup first
                           </div>
                         )}
                       </div>

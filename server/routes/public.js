@@ -95,10 +95,13 @@ publicRouter.get("/overview", async (_req, res) => {
 publicRouter.get("/exams", async (_req, res) => {
   const exams = (
     await pool.query(
-      `SELECT id, code, name, category, sort_order, description, pattern_cycle, pattern_source_url
-       FROM exams
-       WHERE status = 'published'
-       ORDER BY sort_order, name`,
+      `SELECT e.id, e.code, e.name, e.category, e.sort_order, e.description,
+              e.pattern_cycle, e.pattern_source_url, e.created_at,
+              (SELECT count(*)::int FROM mock_tests mt
+               WHERE mt.exam_id = e.id AND mt.status = 'published' AND mt.is_visible = TRUE) AS published_test_count
+       FROM exams e
+       WHERE e.status = 'published'
+       ORDER BY e.sort_order, e.name`,
     )
   ).rows;
 

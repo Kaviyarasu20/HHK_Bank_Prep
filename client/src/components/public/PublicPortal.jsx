@@ -12,6 +12,15 @@ import {
   Target,
 } from "lucide-react";
 import { formatINR } from "../../utils/paymentHelpers";
+import { ExaminationCatalogueView } from "./ExaminationCatalogueView";
+import { SeoLandingPage } from "./SeoLandingPage";
+import {
+  getPathForPublicPage,
+  getSeoMetaForPublicPage,
+  resolvePublicPageFromPath,
+  SEO_LANDING_PAGES,
+} from "../../utils/publicRoutes";
+import { updatePageSeo } from "../../utils/seo";
 import {
   ContactSupportPage,
   PrivacyPage,
@@ -31,7 +40,13 @@ export function PublicPortal({
   onStartTestAsVisitor,
   onToast,
 }) {
-  const [page, setPage] = useState(initialPage);
+  const [page, setPage] = useState(() => {
+    if (typeof window !== "undefined") {
+      const fromUrl = resolvePublicPageFromPath(window.location.pathname);
+      if (fromUrl !== "home") return fromUrl;
+    }
+    return initialPage;
+  });
   const [overview, setOverview] = useState(null);
   const [exams, setExams] = useState([]);
   const [tests, setTests] = useState([]);
@@ -43,40 +58,72 @@ export function PublicPortal({
   const [examFilter, setExamFilter] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const [examsError, setExamsError] = useState("");
 
   useEffect(() => {
     setPage(initialPage);
   }, [initialPage]);
 
+  async function loadPublicPortalData() {
+    setLoading(true);
+    setExamsError("");
+    try {
+      const [ov, ex, ts, pl, cf] = await Promise.all([
+        fetch("/api/public/overview").then((r) => (r.ok ? r.json() : null)),
+        fetch("/api/public/exams").then((r) => (r.ok ? r.json() : Promise.reject(new Error("Could not load examinations.")))),
+        fetch("/api/public/tests").then((r) => (r.ok ? r.json() : null)),
+        fetch("/api/public/plans").then((r) => (r.ok ? r.json() : null)),
+        fetch("/api/public/config").then((r) => (r.ok ? r.json() : null)),
+      ]);
+      setOverview(ov);
+      setExams(ex?.exams ?? []);
+      setTests(ts?.tests ?? []);
+      setPlans(pl?.plans ?? []);
+      setConfig(cf?.config ?? null);
+    } catch (err) {
+      setExamsError(err?.message || "Failed to fetch banking examinations. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    let active = true;
-    Promise.all([
-      fetch("/api/public/overview").then((r) => (r.ok ? r.json() : null)),
-      fetch("/api/public/exams").then((r) => (r.ok ? r.json() : null)),
-      fetch("/api/public/tests").then((r) => (r.ok ? r.json() : null)),
-      fetch("/api/public/plans").then((r) => (r.ok ? r.json() : null)),
-      fetch("/api/public/config").then((r) => (r.ok ? r.json() : null)),
-    ])
-      .then(([ov, ex, ts, pl, cf]) => {
-        if (!active) return;
-        setOverview(ov);
-        setExams(ex?.exams ?? []);
-        setTests(ts?.tests ?? []);
-        setPlans(pl?.plans ?? []);
-        setConfig(cf?.config ?? null);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
+    void loadPublicPortalData();
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const onPopState = () => {
+      setSelectedTest(null);
+      setPage(resolvePublicPageFromPath(window.location.pathname));
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  useEffect(() => {
+    if (selectedTest) {
+      updatePageSeo({
+        title: `${selectedTest.name} | HHK Banking Mock Test`,
+        description:
+          selectedTest.description ||
+          "Timed computer-based banking examination mock test with real exam interface and performance analytics.",
+        path: "/mock-tests",
+      });
+      return;
+    }
+    updatePageSeo(getSeoMetaForPublicPage(page));
+  }, [page, selectedTest]);
 
   function navigate(nextPage) {
     setSelectedTest(null);
     setPage(nextPage);
+    if (typeof window !== "undefined") {
+      const targetPath = getPathForPublicPage(nextPage);
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ page: nextPage }, "", targetPath);
+      }
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -142,17 +189,24 @@ export function PublicPortal({
               ["home", "Home"],
               ["exams", "Exams"],
               ["mock-tests", "Mock Tests"],
+              ["seo-banking-awareness", "Banking Hub"],
+              ["seo-current-affairs", "Current Affairs"],
               ["pricing", "Pricing"],
               ["contact", "Support"],
             ].map(([key, label]) => (
-              <button
+              <a
                 key={key}
-                type="button"
+                href={getPathForPublicPage(key)}
                 className={`public-nav-link ${page === key && !selectedTest ? "active" : ""}`}
-                onClick={() => navigate(key)}
+                style={{ textDecoration: "none" }}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                  e.preventDefault();
+                  navigate(key);
+                }}
               >
                 {label}
-              </button>
+              </a>
             ))}
           </nav>
 
@@ -360,31 +414,19 @@ export function PublicPortal({
             </section>
           </>
         ) : page === "exams" ? (
-          <section className="public-section">
-            <div className="public-section-head">
-              <div>
-                <div className="eyebrow">EXAMINATION CATALOGUE</div>
-                <h1>Available Banking Examinations</h1>
-              </div>
-            </div>
-            <div className="public-card-grid">
-              {exams.map((ex) => (
-                <div className="panel" key={ex.id} style={{ padding: 20 }}>
-                  <span className="exam-pill">{ex.category || "Banking Exam"}</span>
-                  <h3 style={{ margin: "10px 0 6px" }}>{ex.name}</h3>
-                  <p style={{ fontSize: 13.5, color: "#5b5e75" }}>{ex.description}</p>
-                  {(ex.stages || []).map((st) => (
-                    <div key={st.id} style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--line)", fontSize: 13 }}>
-                      <strong>{st.name}</strong> ({Math.round(st.duration_seconds / 60)} mins)
-                      <div style={{ color: "#5b5e75", marginTop: 4 }}>
-                        {(st.sections || []).map((s) => `${s.name} (${s.question_count}Q)`).join(" · ")}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </section>
+          <ExaminationCatalogueView
+            exams={exams}
+            tests={tests}
+            loading={loading}
+            error={examsError}
+            onRetry={loadPublicPortalData}
+            onNavigateHome={() => navigate("home")}
+            onExploreExam={(ex) => {
+              setTestTab("EXAM_WISE");
+              setExamFilter(ex.id);
+              navigate("mock-tests");
+            }}
+          />
         ) : page === "mock-tests" ? (
           <section className="public-section">
             <div className="public-section-head">
@@ -564,6 +606,8 @@ export function PublicPortal({
           <RefundPolicyPage config={config} onBack={() => navigate("home")} onNavigate={navigate} />
         ) : page === "contact" ? (
           <ContactSupportPage config={config} onBack={() => navigate("home")} onToast={onToast} />
+        ) : SEO_LANDING_PAGES[page] ? (
+          <SeoLandingPage pageKey={page} onNavigate={navigate} onOpenAuth={onOpenAuth} />
         ) : null}
       </main>
 
@@ -575,12 +619,31 @@ export function PublicPortal({
             <div>Secure INR Payments via Razorpay · Built for Banking Exam Aspirants</div>
           </div>
           <div className="public-footer-links">
-            <button type="button" onClick={() => navigate("mock-tests")}>Mock Tests</button>
-            <button type="button" onClick={() => navigate("pricing")}>Pricing</button>
-            <button type="button" onClick={() => navigate("terms")}>Terms &amp; Conditions</button>
-            <button type="button" onClick={() => navigate("privacy")}>Privacy Policy</button>
-            <button type="button" onClick={() => navigate("refund-policy")}>Refund &amp; Cancellation Policy</button>
-            <button type="button" onClick={() => navigate("contact")}>Contact &amp; Support</button>
+            {[
+              ["seo-ibps-po", "IBPS PO Prep"],
+              ["seo-sbi-po", "SBI PO Prep"],
+              ["seo-banking-awareness", "Banking Awareness"],
+              ["seo-current-affairs", "Current Affairs"],
+              ["mock-tests", "Mock Tests"],
+              ["pricing", "Pricing"],
+              ["terms", "Terms & Conditions"],
+              ["privacy", "Privacy Policy"],
+              ["refund-policy", "Refund Policy"],
+              ["contact", "Contact & Support"],
+            ].map(([key, label]) => (
+              <a
+                key={key}
+                href={getPathForPublicPage(key)}
+                style={{ color: "inherit", textDecoration: "none", fontSize: 13 }}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                  e.preventDefault();
+                  navigate(key);
+                }}
+              >
+                {label}
+              </a>
+            ))}
           </div>
         </div>
       </footer>

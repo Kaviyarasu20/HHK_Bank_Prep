@@ -30,39 +30,39 @@ import { generateDIQuestionsForHHK } from "../generators/quant/dataInterpretatio
 import { generateBloodRelationsBatch } from "../generators/reasoning/bloodRelations/index.js";
 import { generateSeatingQuestionsForHHK } from "../generators/reasoning/seatingArrangement/index.js";
 import { generateFloorQuestionsForHHK } from "../generators/reasoning/floorArrangement/index.js";
-// import { generatePuzzlesBatch } from "../generators/reasoning/puzzles/index.js";
+import { generatePuzzlesForHHK } from "../generators/reasoning/puzzles/index.js";
 // import { generateSeatingArrangementBatch } from "../generators/reasoning/seatingArrangement/index.js";
-// import { generateSyllogismBatch } from "../generators/reasoning/syllogism/index.js";
-// import { generateInequalityBatch } from "../generators/reasoning/inequality/index.js";
-// import { generateCodingDecodingBatch } from "../generators/reasoning/codingDecoding/index.js";
-// import { generateDirectionDistanceBatch } from "../generators/reasoning/directionDistance/index.js";
-// import { generateOrderRankingBatch } from "../generators/reasoning/orderRanking/index.js";
-// import { generateAlphanumericSeriesBatch } from "../generators/reasoning/alphanumericSeries/index.js";
-// import { generateLetterSeriesBatch } from "../generators/reasoning/letterSeries/index.js";
-// import { generateInputOutputBatch } from "../generators/reasoning/inputOutput/index.js";
-// import { generateLogicalReasoningBatch } from "../generators/reasoning/logicalReasoning/index.js";
-// import { generateStatementConclusionBatch } from "../generators/reasoning/statementConclusion/index.js";
-// import { generateStatementAssumptionBatch } from "../generators/reasoning/statementAssumption/index.js";
-// import { generateCauseEffectBatch } from "../generators/reasoning/causeEffect/index.js";
-// import { generateAnalogyBatch } from "../generators/reasoning/analogy/index.js";
-// import { generateClassificationBatch } from "../generators/reasoning/classification/index.js";
+import { generateSyllogismBatch } from "../generators/reasoning/syllogism/index.js";
+import { generateInequalityBatch } from "../generators/reasoning/inequality/index.js";
+import { generateCodingDecodingBatch } from "../generators/reasoning/codingDecoding/index.js";
+import { generateDirectionDistanceBatch } from "../generators/reasoning/directionDistance/index.js";
+import { generateOrderRankingBatch } from "../generators/reasoning/orderRanking/index.js";
+import { generateAlphanumericSeriesBatch } from "../generators/reasoning/alphanumericSeries/index.js";
+import { generateLetterSeriesBatch } from "../generators/reasoning/letterSeries/index.js";
+import { generateInputOutputBatch } from "../generators/reasoning/inputOutput/index.js";
+import { generateLogicalReasoningBatch } from "../generators/reasoning/logicalReasoning/index.js";
+import { generateStatementConclusionBatch } from "../generators/reasoning/statementConclusion/index.js";
+import { generateStatementAssumptionBatch } from "../generators/reasoning/statementAssumption/index.js";
+import { generateCauseEffectBatch } from "../generators/reasoning/causeEffect/index.js";
+import { generateAnalogyBatch } from "../generators/reasoning/analogy/index.js";
+import { generateClassificationBatch } from "../generators/reasoning/classification/index.js";
 
 // ============================================================================
 // 3. ENGLISH LANGUAGE GENERATORS (PLANNED)
 // ============================================================================
 // import { generateReadingComprehensionBatch } from "../generators/english/readingComprehension/index.js";
-// import { generateClozeTestBatch } from "../generators/english/clozeTest/index.js";
-// import { generateErrorDetectionBatch } from "../generators/english/errorDetection/index.js";
-// import { generateSentenceCorrectionBatch } from "../generators/english/sentenceCorrection/index.js";
-// import { generateFillInTheBlanksBatch } from "../generators/english/fillInTheBlanks/index.js";
-// import { generateParaJumblesBatch } from "../generators/english/paraJumbles/index.js";
-// import { generateSentenceRearrangementBatch } from "../generators/english/sentenceRearrangement/index.js";
-// import { generatePhraseReplacementBatch } from "../generators/english/phraseReplacement/index.js";
-// import { generateVocabularyBatch } from "../generators/english/vocabulary/index.js";
-// import { generateSynonymsAntonymsBatch } from "../generators/english/synonymsAntonyms/index.js";
-// import { generateIdiomsPhrasesBatch } from "../generators/english/idiomsPhrases/index.js";
-// import { generateWordUsageBatch } from "../generators/english/wordUsage/index.js";
-// import { generateGrammarBatch } from "../generators/english/grammar/index.js";
+import { generateClozeTestBatch } from "../generators/english/clozeTest/index.js";
+import { generateErrorDetectionBatch } from "../generators/english/errorDetection/index.js";
+import { generateSentenceCorrectionBatch } from "../generators/english/sentenceCorrection/index.js";
+import { generateFillInTheBlanksBatch } from "../generators/english/fillInTheBlanks/index.js";
+import { generateParaJumblesBatch } from "../generators/english/paraJumbles/index.js";
+import { generateSentenceRearrangementBatch } from "../generators/english/sentenceRearrangement/index.js";
+import { generatePhraseReplacementBatch } from "../generators/english/phraseReplacement/index.js";
+import { generateVocabularyBatch } from "../generators/english/vocabulary/index.js";
+import { generateSynonymsAntonymsBatch } from "../generators/english/synonymsAntonyms/index.js";
+import { generateIdiomsPhrasesBatch } from "../generators/english/idiomsPhrases/index.js";
+import { generateWordUsageBatch } from "../generators/english/wordUsage/index.js";
+import { generateGrammarBatch } from "../generators/english/grammar/index.js";
 
 // ============================================================================
 // 4. BANKING & GENERAL AWARENESS + COMPUTER GENERATORS (PLANNED)
@@ -136,35 +136,35 @@ const FINGERPRINTED_GENERATORS = {
   floor_arrangement: { batchFn: generateFloorQuestionsForHHK, seedStride: 233 },
   // puzzles: { batchFn: generatePuzzlesBatch, seedStride: 233 },
   // seating_arrangement: { batchFn: generateSeatingArrangementBatch, seedStride: 239 },
-  // syllogism: { batchFn: generateSyllogismBatch, seedStride: 241 },
-  // inequality: { batchFn: generateInequalityBatch, seedStride: 251 },
-  // coding_decoding: { batchFn: generateCodingDecodingBatch, seedStride: 257 },
-  // direction_distance: { batchFn: generateDirectionDistanceBatch, seedStride: 263 },
-  // order_ranking: { batchFn: generateOrderRankingBatch, seedStride: 269 },
-  // alphanumeric_series: { batchFn: generateAlphanumericSeriesBatch, seedStride: 271 },
-  // letter_series: { batchFn: generateLetterSeriesBatch, seedStride: 277 },
-  // input_output: { batchFn: generateInputOutputBatch, seedStride: 281 },
-  // logical_reasoning: { batchFn: generateLogicalReasoningBatch, seedStride: 283 },
-  // statement_conclusion: { batchFn: generateStatementConclusionBatch, seedStride: 293 },
-  // statement_assumption: { batchFn: generateStatementAssumptionBatch, seedStride: 307 },
-  // cause_effect: { batchFn: generateCauseEffectBatch, seedStride: 311 },
-  // analogy: { batchFn: generateAnalogyBatch, seedStride: 313 },
-  // classification: { batchFn: generateClassificationBatch, seedStride: 317 },
+  syllogism: { batchFn: generateSyllogismBatch, seedStride: 241 },
+  inequality: { batchFn: generateInequalityBatch, seedStride: 251 },
+  coding_decoding: { batchFn: generateCodingDecodingBatch, seedStride: 257 },
+  direction_distance: { batchFn: generateDirectionDistanceBatch, seedStride: 263 },
+  order_ranking: { batchFn: generateOrderRankingBatch, seedStride: 269 },
+  alphanumeric_series: { batchFn: generateAlphanumericSeriesBatch, seedStride: 271 },
+  letter_series: { batchFn: generateLetterSeriesBatch, seedStride: 277 },
+  input_output: { batchFn: generateInputOutputBatch, seedStride: 281 },
+  logical_reasoning: { batchFn: generateLogicalReasoningBatch, seedStride: 283 },
+  statement_conclusion: { batchFn: generateStatementConclusionBatch, seedStride: 293 },
+  statement_assumption: { batchFn: generateStatementAssumptionBatch, seedStride: 307 },
+  cause_effect: { batchFn: generateCauseEffectBatch, seedStride: 311 },
+  analogy: { batchFn: generateAnalogyBatch, seedStride: 313 },
+  classification: { batchFn: generateClassificationBatch, seedStride: 317 },
 
   // --- English (Planned) ---
   // reading_comprehension: { batchFn: generateReadingComprehensionBatch, seedStride: 331 },
-  // cloze_test: { batchFn: generateClozeTestBatch, seedStride: 337 },
-  // error_detection: { batchFn: generateErrorDetectionBatch, seedStride: 347 },
-  // sentence_correction: { batchFn: generateSentenceCorrectionBatch, seedStride: 349 },
-  // fill_in_the_blanks: { batchFn: generateFillInTheBlanksBatch, seedStride: 353 },
-  // para_jumbles: { batchFn: generateParaJumblesBatch, seedStride: 359 },
-  // sentence_rearrangement: { batchFn: generateSentenceRearrangementBatch, seedStride: 367 },
-  // phrase_replacement: { batchFn: generatePhraseReplacementBatch, seedStride: 373 },
-  // vocabulary: { batchFn: generateVocabularyBatch, seedStride: 379 },
-  // synonyms_antonyms: { batchFn: generateSynonymsAntonymsBatch, seedStride: 383 },
-  // idioms_phrases: { batchFn: generateIdiomsPhrasesBatch, seedStride: 389 },
-  // word_usage: { batchFn: generateWordUsageBatch, seedStride: 397 },
-  // grammar: { batchFn: generateGrammarBatch, seedStride: 401 },
+  cloze_test: { batchFn: generateClozeTestBatch, seedStride: 337 },
+  error_detection: { batchFn: generateErrorDetectionBatch, seedStride: 347 },
+  sentence_correction: { batchFn: generateSentenceCorrectionBatch, seedStride: 349 },
+  fill_in_the_blanks: { batchFn: generateFillInTheBlanksBatch, seedStride: 353 },
+  para_jumbles: { batchFn: generateParaJumblesBatch, seedStride: 359 },
+  sentence_rearrangement: { batchFn: generateSentenceRearrangementBatch, seedStride: 367 },
+  phrase_replacement: { batchFn: generatePhraseReplacementBatch, seedStride: 373 },
+  vocabulary: { batchFn: generateVocabularyBatch, seedStride: 379 },
+  synonyms_antonyms: { batchFn: generateSynonymsAntonymsBatch, seedStride: 383 },
+  idioms_phrases: { batchFn: generateIdiomsPhrasesBatch, seedStride: 389 },
+  word_usage: { batchFn: generateWordUsageBatch, seedStride: 397 },
+  grammar: { batchFn: generateGrammarBatch, seedStride: 401 },
 
   // --- Banking / General / Computer Awareness (Planned) ---
   // banking_awareness: { batchFn: generateBankingAwarenessBatch, seedStride: 409 },
@@ -188,43 +188,43 @@ export function resolveSubtopicEngineFilter(topicName = "", subtopicName = "") {
   if (t.includes("seating")) {
     return { engine: "seating_arrangement", allowedTypes: null };
   }
-  if (t.includes("floor") || t.includes("arrangement")) {
+  if (t.includes("floor") || (t.includes("arrangement") && !t.includes("rearrangement"))) {
     return { engine: "floor_arrangement", allowedTypes: null };
   }
   // Uncomment each route below when its generator is added to FINGERPRINTED_GENERATORS:
-  // if (t.includes("puzzle")) return { engine: "puzzles", allowedTypes: null };
+  if (t.includes("puzzle")) return { engine: "puzzles", allowedTypes: null };
   // if (t.includes("seating")) return { engine: "seating_arrangement", allowedTypes: null };
-  // if (t.includes("syllogism")) return { engine: "syllogism", allowedTypes: null };
-  // if (t.includes("inequalit")) return { engine: "inequality", allowedTypes: null };
-  // if (t.includes("coding") || t.includes("decoding")) return { engine: "coding_decoding", allowedTypes: null };
-  // if (t.includes("direction") && !t.includes("speed")) return { engine: "direction_distance", allowedTypes: null };
-  // if (t.includes("order") || t.includes("ranking")) return { engine: "order_ranking", allowedTypes: null };
-  // if (t.includes("alphanumeric")) return { engine: "alphanumeric_series", allowedTypes: null };
-  // if (t.includes("letter series")) return { engine: "letter_series", allowedTypes: null };
-  // if (t.includes("input-output") || t.includes("input output")) return { engine: "input_output", allowedTypes: null };
-  // if (t.includes("logical reasoning")) return { engine: "logical_reasoning", allowedTypes: null };
-  // if (t.includes("conclusion")) return { engine: "statement_conclusion", allowedTypes: null };
-  // if (t.includes("assumption")) return { engine: "statement_assumption", allowedTypes: null };
-  // if (t.includes("cause")) return { engine: "cause_effect", allowedTypes: null };
-  // if (t.includes("analogy")) return { engine: "analogy", allowedTypes: null };
-  // if (t.includes("classification")) return { engine: "classification", allowedTypes: null };
+  if (t.includes("syllogism") || s.includes("syllogism")) return { engine: "syllogism", allowedTypes: null };
+  if (t.includes("inequalit") || s.includes("inequalit")) return { engine: "inequality", allowedTypes: null };
+  if (t.includes("coding") || t.includes("decoding") || s.includes("coding") || s.includes("decoding")) return { engine: "coding_decoding", allowedTypes: null };
+  if ((t.includes("direction") || s.includes("direction")) && !t.includes("speed")) return { engine: "direction_distance", allowedTypes: null };
+  if (t.includes("order") || t.includes("ranking") || s.includes("order") || s.includes("ranking")) return { engine: "order_ranking", allowedTypes: null };
+  if (t.includes("alphanumeric") || s.includes("alphanumeric")) return { engine: "alphanumeric_series", allowedTypes: null };
+  if (t.includes("letter series") || s.includes("letter series")) return { engine: "letter_series", allowedTypes: null };
+  if (t.includes("input-output") || t.includes("input output") || s.includes("input-output") || s.includes("input output")) return { engine: "input_output", allowedTypes: null };
+  if (t.includes("logical reasoning") || s.includes("logical reasoning")) return { engine: "logical_reasoning", allowedTypes: null };
+  if (t.includes("conclusion") || s.includes("conclusion")) return { engine: "statement_conclusion", allowedTypes: null };
+  if (t.includes("assumption") || s.includes("assumption")) return { engine: "statement_assumption", allowedTypes: null };
+  if (t.includes("cause") || s.includes("cause")) return { engine: "cause_effect", allowedTypes: null };
+  if (t.includes("analogy") || s.includes("analogy")) return { engine: "analogy", allowedTypes: null };
+  if (t.includes("classification") || t.includes("odd one") || s.includes("classification")) return { engine: "classification", allowedTypes: null };
 
   // ==========================================================================
   // ENGLISH LANGUAGE ROUTES (Uncomment as each generator is built)
   // ==========================================================================
   // if (t.includes("reading comprehension")) return { engine: "reading_comprehension", allowedTypes: null };
-  // if (t.includes("cloze")) return { engine: "cloze_test", allowedTypes: null };
-  // if (t.includes("error detection")) return { engine: "error_detection", allowedTypes: null };
-  // if (t.includes("sentence correction")) return { engine: "sentence_correction", allowedTypes: null };
-  // if (t.includes("fill in the blank")) return { engine: "fill_in_the_blanks", allowedTypes: null };
-  // if (t.includes("para jumble")) return { engine: "para_jumbles", allowedTypes: null };
-  // if (t.includes("sentence rearrangement")) return { engine: "sentence_rearrangement", allowedTypes: null };
-  // if (t.includes("phrase replacement")) return { engine: "phrase_replacement", allowedTypes: null };
-  // if (t.includes("vocabulary")) return { engine: "vocabulary", allowedTypes: null };
-  // if (t.includes("synonym") || t.includes("antonym")) return { engine: "synonyms_antonyms", allowedTypes: null };
-  // if (t.includes("idiom") || t.includes("phrase")) return { engine: "idioms_phrases", allowedTypes: null };
-  // if (t.includes("word usage")) return { engine: "word_usage", allowedTypes: null };
-  // if (t.includes("grammar")) return { engine: "grammar", allowedTypes: null };
+  if (t.includes("cloze") || s.includes("cloze")) return { engine: "cloze_test", allowedTypes: null };
+  if (t.includes("error detection") || s.includes("error detection")) return { engine: "error_detection", allowedTypes: null };
+  if (t.includes("sentence correction") || s.includes("sentence correction")) return { engine: "sentence_correction", allowedTypes: null };
+  if (t.includes("fill in the blank") || t.includes("filler") || s.includes("fill in the blank")) return { engine: "fill_in_the_blanks", allowedTypes: null };
+  if (t.includes("para jumble") || t.includes("parajumble") || s.includes("para jumble")) return { engine: "para_jumbles", allowedTypes: null };
+  if (t.includes("sentence rearrangement") || t.includes("word swap") || s.includes("sentence rearrangement")) return { engine: "sentence_rearrangement", allowedTypes: null };
+  if (t.includes("phrase replacement") || s.includes("phrase replacement")) return { engine: "phrase_replacement", allowedTypes: null };
+  if (t.includes("vocabulary") || t.includes("spelling") || s.includes("vocabulary")) return { engine: "vocabulary", allowedTypes: null };
+  if (t.includes("synonym") || t.includes("antonym") || s.includes("synonym") || s.includes("antonym")) return { engine: "synonyms_antonyms", allowedTypes: null };
+  if (t.includes("idiom") || (t.includes("phrase") && !t.includes("replacement")) || s.includes("idiom")) return { engine: "idioms_phrases", allowedTypes: null };
+  if (t.includes("word usage") || s.includes("word usage")) return { engine: "word_usage", allowedTypes: null };
+  if (t.includes("grammar") || s.includes("grammar")) return { engine: "grammar", allowedTypes: null };
 
   // ==========================================================================
   // BANKING AWARENESS / GENERAL AWARENESS / COMPUTER ROUTES (Uncomment when built)
@@ -496,6 +496,9 @@ export function generateFromQuestionEngine({
     if (q.fingerprint) seenSet.add(q.fingerprint);
     return {
       ...q,
+      questionId: q.questionId || `${seenKey.toUpperCase()}_${Date.now()}_${idx}`,
+      exam: q.exam || blueprintKey,
+      solutionSteps: Array.isArray(q.solutionSteps) && q.solutionSteps.length > 0 ? q.solutionSteps : [q.explanation || "Verified by HHK Question Engine."],
       subType: q.templateId || q.sub_type,
       options: q.optionsArray,
       optionsMap: q.options,
@@ -578,7 +581,8 @@ export function generateFromQuestionEngine({
         fingerprinted.batchFn,
         preferEngine,
         fingerprinted.seedStride,
-        idx
+        idx,
+        (preferEngine === "syllogism" || preferEngine === "inequality" || preferEngine === "coding_decoding" || preferEngine === "direction_distance" || preferEngine === "order_ranking" || preferEngine === "alphanumeric_series" || preferEngine === "letter_series" || preferEngine === "input_output" || preferEngine === "logical_reasoning" || preferEngine === "statement_conclusion" || preferEngine === "statement_assumption" || preferEngine === "cause_effect" || preferEngine === "analogy" || preferEngine === "classification" || preferEngine === "error_detection" || preferEngine === "cloze_test" || preferEngine === "fill_in_the_blanks" || preferEngine === "para_jumbles" || preferEngine === "phrase_replacement" || preferEngine === "sentence_correction" || preferEngine === "sentence_rearrangement" || preferEngine === "synonyms_antonyms" || preferEngine === "idioms_phrases" || preferEngine === "vocabulary" || preferEngine === "word_usage" || preferEngine === "grammar") ? { subtopicName } : {}
       );
     }
 
@@ -617,6 +621,24 @@ export function generateFromQuestionEngine({
     return seatingRaw.map((rawQ) =>
       formatEngineQuestionForHHK(rawQ, {
         topicName: topicName || "Seating Arrangement",
+        subtopicName: subtopicName || rawQ.subtopicName || rawQ.subType,
+        optionCount,
+      })
+    );
+  }
+
+  if (engine === "puzzles") {
+    const puzzlesRaw = generatePuzzlesForHHK({
+      exam: blueprintKey,
+      stage: stageName,
+      puzzleType: subtopicName || "AUTO",
+      difficulty: engineDiff === "AUTO" ? "Medium" : engineDiff,
+      count,
+      seed: Date.now() ^ Math.floor(Math.random() * 1e9),
+    });
+    return puzzlesRaw.map((rawQ) =>
+      formatEngineQuestionForHHK(rawQ, {
+        topicName: topicName || "Puzzles",
         subtopicName: subtopicName || rawQ.subtopicName || rawQ.subType,
         optionCount,
       })

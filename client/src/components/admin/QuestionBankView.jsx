@@ -10,7 +10,7 @@
 // 6. Saved questions search, filter by topic, multi-select bulk operations, and deduplication
 // ============================================================================
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Check,
   Copy,
@@ -78,6 +78,33 @@ function QuestionBankView({
 }) {
   const [isCustomTopic, setIsCustomTopic] = useState(false);
   const [isCustomSubtopic, setIsCustomSubtopic] = useState(false);
+  const [supportedAutoTopics, setSupportedAutoTopics] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/admin/questions/generate/topics", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!active || !data?.supportedTopics) return;
+        const flat = [
+          ...(data.supportedTopics.quant ?? []),
+          ...(data.supportedTopics.reasoning ?? []),
+          ...(data.supportedTopics.english ?? []),
+        ].map((t) => String(t).trim().toLowerCase());
+        setSupportedAutoTopics(flat);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const isTopicGeneratable = (topicName) => {
+    const norm = String(topicName || "").trim().toLowerCase();
+    if (!norm) return false;
+    if (!supportedAutoTopics.length) return true;
+    return supportedAutoTopics.some((t) => norm === t || norm.includes(t) || t.includes(norm));
+  };
   const [topicFilter, setTopicFilter] = useState("");
   const [genCount, setGenCount] = useState(15);
   const [genDifficulty, setGenDifficulty] = useState("medium");
@@ -187,7 +214,7 @@ function QuestionBankView({
                 exams={exams}
                 getKey={(e) => e.id}
                 getValue={(_e, i) => i}
-                getLabel={(e) => `${e.name} \xB7 ${e.status}`}
+                getLabel={(e) => e.name}
               />
             </select>
           </label>
@@ -260,18 +287,42 @@ function QuestionBankView({
                   : "← Choose section first"}
               </option>
               {syllabusTopics.length > 0
-                ? syllabusTopics.map((t) => (
-                    <option key={t.name} value={t.name}>
-                      {t.name}
-                    </option>
-                  ))
+                ? (() => {
+                    const ready = syllabusTopics.filter((t) => isTopicGeneratable(t.name));
+                    const manualOnly = syllabusTopics.filter((t) => !isTopicGeneratable(t.name));
+                    return (
+                      <>
+                        {ready.length > 0 && (
+                          <optgroup label={`Auto-Generate Ready (${ready.length})`}>
+                            {ready.map((t) => (
+                              <option key={t.name} value={t.name}>
+                                ✓ {t.name}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {manualOnly.length > 0 && (
+                          <optgroup label={`Manual / CSV Only (${manualOnly.length})`}>
+                            {manualOnly.map((t) => (
+                              <option key={t.name} value={t.name} disabled>
+                                {t.name} (Manual / CSV only)
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                      </>
+                    );
+                  })()
                 : BANKING_SYLLABUS.map((subj) => (
                     <optgroup key={subj.id} label={subj.shortName}>
-                      {subj.topics.map((t) => (
-                        <option key={t.name} value={t.name}>
-                          {t.name}
-                        </option>
-                      ))}
+                      {subj.topics.map((t) => {
+                        const ok = isTopicGeneratable(t.name);
+                        return (
+                          <option key={t.name} value={t.name} disabled={!ok}>
+                            {ok ? `✓ ${t.name}` : `${t.name} (Manual / CSV only)`}
+                          </option>
+                        );
+                      })}
                     </optgroup>
                   ))}
             </select>
@@ -689,7 +740,7 @@ function QuestionBankView({
                   exams={exams}
                   getKey={(e) => e.id}
                   getValue={(_e, i) => i}
-                  getLabel={(e) => `${e.name} \xB7 ${e.status}`}
+                  getLabel={(e) => e.name}
                 />
               </select>
             </label>

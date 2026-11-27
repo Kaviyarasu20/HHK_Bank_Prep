@@ -27,6 +27,7 @@ import {
   computeQuestionFingerprint,
 } from "./subjectGeneratorRegistry.js";
 import { validateMockTestQuestion } from "./questionQualityValidator.js";
+import { arrangeSectionQuestionsGrouped } from "./questionSequencer.js";
 import {
   buildSectionDistributionPlan,
   createSeededRng,
@@ -128,33 +129,7 @@ export function previewExamWiseDistribution({
  * so consecutive mock tests never share identical question sequences.
  */
 function arrangeSectionQuestions(questions, rng) {
-  const diOrPassageGroups = new Map();
-  const standalones = [];
-
-  for (const q of questions) {
-    const groupKey = q.passageGroupKey || q.passage_group_id || (q.diSetId ? `di:${q.diSetId}` : null);
-    if (groupKey) {
-      if (!diOrPassageGroups.has(groupKey)) diOrPassageGroups.set(groupKey, []);
-      diOrPassageGroups.get(groupKey).push(q);
-    } else {
-      standalones.push(q);
-    }
-  }
-
-  // Shuffle standalone questions
-  for (let i = standalones.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [standalones[i], standalones[j]] = [standalones[j], standalones[i]];
-  }
-
-  // Combine groups + standalones into blocks and shuffle block order
-  const blocks = [...Array.from(diOrPassageGroups.values()), ...standalones.map((q) => [q])];
-  for (let i = blocks.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [blocks[i], blocks[j]] = [blocks[j], blocks[i]];
-  }
-
-  return blocks.flat().map((q, idx) => ({ ...q, sectionSortOrder: idx }));
+  return arrangeSectionQuestionsGrouped(questions, rng, { shuffleBlocks: true });
 }
 
 /**
