@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 function LeaderboardView({
   period,
   setPeriod,
@@ -10,7 +11,7 @@ function LeaderboardView({
           <h1>Leaderboard</h1>
           <p>Rankings use submitted mock attempts.</p>
         </div>
-        <select
+        <CustomSelect
     className="period-select"
     value={period}
     onChange={(e) => setPeriod(e.target.value)}
@@ -18,7 +19,7 @@ function LeaderboardView({
           <option value="weekly">Weekly</option>
           <option value="monthly">Monthly</option>
           <option value="overall">Overall</option>
-        </select>
+        </CustomSelect>
       </div>
       <div className="panel admin-panel">
         <div className="section-table-wrap">

@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 // Place at: client/src/components/admin/TopicwiseTestView.jsx
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -467,7 +468,7 @@ function TopicwiseTestView({
             <div className="question-config">
               <label>
                 Subject
-                <select
+                <CustomSelect
                   value={subject}
                   onChange={(e) => {
                     setSubject(e.target.value);
@@ -479,12 +480,12 @@ function TopicwiseTestView({
                       {s.shortName}
                     </option>
                   ))}
-                </select>
+                </CustomSelect>
               </label>
 
               <label>
                 Topic
-                <select
+                <CustomSelect
                   value={topic}
                   onChange={(e) => {
                     setTopic(e.target.value);
@@ -497,13 +498,13 @@ function TopicwiseTestView({
                       {t.name} {isAutoSupported(t.name) ? "✦ Auto-Gen" : ""}
                     </option>
                   ))}
-                </select>
+                </CustomSelect>
               </label>
 
               {selectedTopicObj?.subtopics?.length > 0 && (
                 <label>
                   Subtopic (optional for generator)
-                  <select
+                  <CustomSelect
                     value={subtopicName}
                     onChange={(e) => setSubtopicName(e.target.value)}
                   >
@@ -513,7 +514,7 @@ function TopicwiseTestView({
                         {sub}
                       </option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </label>
               )}
 
@@ -625,7 +626,7 @@ function TopicwiseTestView({
 
               <label>
                 Generator Difficulty
-                <select
+                <CustomSelect
                   value={difficulty}
                   onChange={(e) => setDifficulty(e.target.value)}
                 >
@@ -633,18 +634,18 @@ function TopicwiseTestView({
                   <option value="medium">Medium (Prelims PO)</option>
                   <option value="hard">Hard (Mains)</option>
                   <option value="auto">Auto Blueprint Mix</option>
-                </select>
+                </CustomSelect>
               </label>
 
               <label>
                 Review Policy
-                <select
+                <CustomSelect
                   value={reviewPolicy}
                   onChange={(e) => setReviewPolicy(e.target.value)}
                 >
                   <option value="after_submit">Allow review after submission</option>
                   <option value="never">Hide answer review</option>
-                </select>
+                </CustomSelect>
               </label>
 
               <label>
@@ -676,7 +677,7 @@ function TopicwiseTestView({
                 </p>
                 {String(topic || "").trim().toLowerCase() === "reading comprehension" && (
                   <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
-                    <select
+                    <CustomSelect
                       aria-label="RC Category"
                       value={rcCategory}
                       onChange={(e) => setRcCategory(e.target.value)}
@@ -702,8 +703,8 @@ function TopicwiseTestView({
                       ].map((c) => (
                         <option key={c} value={c}>{c}</option>
                       ))}
-                    </select>
-                    <select
+                    </CustomSelect>
+                    <CustomSelect
                       aria-label="Passage Length"
                       value={rcPassageLength}
                       onChange={(e) => setRcPassageLength(e.target.value)}
@@ -712,7 +713,7 @@ function TopicwiseTestView({
                       <option value="short">Short Passage (220–320 words)</option>
                       <option value="medium">Medium Passage (380–520 words)</option>
                       <option value="long">Long Passage (560–740 words)</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                 )}
               </div>
@@ -891,7 +892,7 @@ function TopicwiseTestView({
 
         {/* Filter Bar for Manage Grouped List */}
         <div className="topicwise-filter-bar">
-          <select
+          <CustomSelect
             value={filterSubject}
             onChange={(e) => {
               setFilterSubject(e.target.value);
@@ -905,9 +906,9 @@ function TopicwiseTestView({
                 {s}
               </option>
             ))}
-          </select>
+          </CustomSelect>
 
-          <select
+          <CustomSelect
             value={filterTopic}
             onChange={(e) => setFilterTopic(e.target.value)}
             aria-label="Filter by Topic"
@@ -918,9 +919,9 @@ function TopicwiseTestView({
                 {top}
               </option>
             ))}
-          </select>
+          </CustomSelect>
 
-          <select
+          <CustomSelect
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             aria-label="Filter by Status"
@@ -928,7 +929,7 @@ function TopicwiseTestView({
             <option value="all">All Statuses</option>
             <option value="draft">Draft</option>
             <option value="published">Published</option>
-          </select>
+          </CustomSelect>
         </div>
 
         {/* Grouped Subject -> Topic -> Set Cards */}

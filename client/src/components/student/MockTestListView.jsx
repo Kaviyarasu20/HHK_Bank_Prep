@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useMemo, useState } from "react";
 import { ArrowRight, BookOpen, Clock3, Layers, Play, Target } from "lucide-react";
 import { ExamOptGroups } from "../../utils/examCategories";
@@ -107,7 +108,7 @@ function MockTestListView({
         </div>
 
         {activeTab === "EXAM_WISE" && exams.length > 0 && (
-          <select
+          <CustomSelect
             className="period-select"
             aria-label="Filter mock tests by exam"
             value={examFilter}
@@ -120,7 +121,7 @@ function MockTestListView({
               getValue={(e) => e.id}
               getLabel={(e) => e.name}
             />
-          </select>
+          </CustomSelect>
         )}
       </div>
 
@@ -207,7 +208,7 @@ function MockTestListView({
           <div className="panel topicwise-student-filters">
             <label>
               Subject
-              <select
+              <CustomSelect
                 value={subjectFilter}
                 onChange={(e) => {
                   setSubjectFilter(e.target.value);
@@ -220,12 +221,12 @@ function MockTestListView({
                     {s}
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
             </label>
 
             <label>
               Topic
-              <select
+              <CustomSelect
                 value={topicFilter}
                 onChange={(e) => setTopicFilter(e.target.value)}
               >
@@ -235,7 +236,7 @@ function MockTestListView({
                     {top}
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
             </label>
           </div>
 

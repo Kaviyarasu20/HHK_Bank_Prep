@@ -35,18 +35,18 @@ function LoginForm({
   return (
     <>
       <form className="auth-card" onSubmit={handleSubmit}>
-        {onReturnToMockTests && (
-          <button
-            type="button"
-            className="ghost-btn"
-            onClick={onReturnToMockTests}
-            style={{ alignSelf: "flex-start", marginBottom: 12 }}
-          >
-            <ArrowLeft size={15} /> Return to Mock Tests
-          </button>
-        )}
-
-        <span className="auth-overline">WELCOME TO HHK</span>
+        <div className="auth-card-heading">
+          <span className="auth-overline">WELCOME TO HHK</span>
+          {onReturnToMockTests && (
+            <button
+              type="button"
+              className="auth-return-link"
+              onClick={onReturnToMockTests}
+            >
+              <ArrowLeft size={14} /> <span>Mock tests</span>
+            </button>
+          )}
+        </div>
         <h2>Sign in to your account</h2>
         <p>Continue your banking exam preparation.</p>
 

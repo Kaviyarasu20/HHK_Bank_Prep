@@ -1,3 +1,4 @@
+import { CustomSelect } from "./components/common/CustomSelect.jsx";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { ExamOptGroups } from "./utils/examCategories";
 import { subscribeCompanionTabLock } from "./utils/examLock";
@@ -673,7 +674,7 @@ function TargetExamSelector({ onToast }) {
         <span className="tiny-label">TARGET EXAM</span>
         <ChevronDown size={15} />
       </div>
-      <select
+      <CustomSelect
         value={selected}
         onChange={(e) => change(e.target.value)}
         aria-label="Target examination"
@@ -685,7 +686,7 @@ function TargetExamSelector({ onToast }) {
           getValue={(e) => e.id}
           getLabel={(e) => e.name}
         />
-      </select>
+      </CustomSelect>
       <div className="target-date">
         <CalendarDays size={14} />
         {exams.length

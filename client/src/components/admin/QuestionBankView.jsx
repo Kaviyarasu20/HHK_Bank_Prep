@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 // ============================================================================
 // QUESTION BANK MANAGEMENT & CONTENT AUTHORING VIEW
 // ============================================================================
@@ -197,7 +198,7 @@ function QuestionBankView({
         >
           <label>
             Exam
-            <select
+            <CustomSelect
               value={examIndex}
               onChange={(e) => {
                 onSetExamIndex(Number(e.target.value));
@@ -216,12 +217,12 @@ function QuestionBankView({
                 getValue={(_e, i) => i}
                 getLabel={(e) => e.name}
               />
-            </select>
+            </CustomSelect>
           </label>
 
           <label>
             Stage
-            <select
+            <CustomSelect
               value={stageIndex}
               onChange={(e) => {
                 onSetStageIndex(Number(e.target.value));
@@ -238,12 +239,12 @@ function QuestionBankView({
                   {s.name}
                 </option>
               ))}
-            </select>
+            </CustomSelect>
           </label>
 
           <label>
             Section
-            <select
+            <CustomSelect
               value={form.sectionId}
               onChange={(e) => {
                 onSetForm({
@@ -264,12 +265,12 @@ function QuestionBankView({
                   {s.name}
                 </option>
               ))}
-            </select>
+            </CustomSelect>
           </label>
 
           <label>
             Topic to Auto-Generate
-            <select
+            <CustomSelect
               value={form.topicName}
               disabled={!selectedSection}
               onChange={(e) => {
@@ -325,13 +326,13 @@ function QuestionBankView({
                       })}
                     </optgroup>
                   ))}
-            </select>
+            </CustomSelect>
           </label>
 
           {availableSubtopics.length > 0 && (
             <label>
               Subtopic Pattern
-              <select
+              <CustomSelect
                 value={form.subtopicName}
                 onChange={(e) => {
                   onSetForm({ ...form, subtopicName: e.target.value });
@@ -346,13 +347,13 @@ function QuestionBankView({
                     {st}
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
             </label>
           )}
 
           <label>
             Questions Count
-            <select
+            <CustomSelect
               value={genCount}
               onChange={(e) => setGenCount(Number(e.target.value))}
             >
@@ -364,19 +365,19 @@ function QuestionBankView({
               </option>
               <option value={35}>35 Questions (Full Prelims Section)</option>
               <option value={40}>40 Questions (Full RRB Section)</option>
-            </select>
+            </CustomSelect>
           </label>
 
           <label>
             Difficulty
-            <select
+            <CustomSelect
               value={genDifficulty}
               onChange={(e) => setGenDifficulty(e.target.value)}
             >
               <option value="easy">Easy (Prelims Clerk)</option>
               <option value="medium">Medium (Prelims PO)</option>
               <option value="hard">Hard (Mains Level)</option>
-            </select>
+            </CustomSelect>
           </label>
         </div>
 
@@ -724,7 +725,7 @@ function QuestionBankView({
           <div className="question-config">
             <label>
               Exam
-              <select
+              <CustomSelect
                 value={examIndex}
                 onChange={(e) => {
                   onSetExamIndex(Number(e.target.value));
@@ -742,11 +743,11 @@ function QuestionBankView({
                   getValue={(_e, i) => i}
                   getLabel={(e) => e.name}
                 />
-              </select>
+              </CustomSelect>
             </label>
             <label>
               Stage
-              <select
+              <CustomSelect
                 value={stageIndex}
                 onChange={(e) => {
                   onSetStageIndex(Number(e.target.value));
@@ -762,11 +763,11 @@ function QuestionBankView({
                     {s.name}
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
             </label>
             <label>
               Section
-              <select
+              <CustomSelect
                 value={form.sectionId}
                 onChange={(e) => {
                   onSetForm({
@@ -786,13 +787,13 @@ function QuestionBankView({
                     {s.name}
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
             </label>
 
             {!selectedSection ? (
               <label>
                 Topic
-                <select
+                <CustomSelect
                   value=""
                   disabled
                   style={{
@@ -803,12 +804,12 @@ function QuestionBankView({
                   title="Choose a section first to view topics"
                 >
                   <option value="">← Choose a section first</option>
-                </select>
+                </CustomSelect>
               </label>
             ) : !isCustomTopic ? (
               <label>
                 Topic
-                <select
+                <CustomSelect
                   value={
                     syllabusTopics.some((t) => t.name === form.topicName)
                       ? form.topicName
@@ -853,7 +854,7 @@ function QuestionBankView({
                         </optgroup>
                       ))}
                   <option value="__custom__">+ Custom topic...</option>
-                </select>
+                </CustomSelect>
               </label>
             ) : (
               <div>
@@ -877,7 +878,7 @@ function QuestionBankView({
             {availableSubtopics.length > 0 && !isCustomSubtopic ? (
               <label>
                 Subtopic (optional)
-                <select
+                <CustomSelect
                   value={
                     availableSubtopics.includes(form.subtopicName)
                       ? form.subtopicName
@@ -900,7 +901,7 @@ function QuestionBankView({
                     </option>
                   ))}
                   <option value="__custom__">+ Custom subtopic...</option>
-                </select>
+                </CustomSelect>
               </label>
             ) : form.topicName ? (
               <div>
@@ -928,7 +929,7 @@ function QuestionBankView({
             ) : null}
             <label>
               Difficulty
-              <select
+              <CustomSelect
                 value={form.difficulty}
                 onChange={(e) =>
                   onSetForm({ ...form, difficulty: e.target.value })
@@ -937,11 +938,11 @@ function QuestionBankView({
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>
-              </select>
+              </CustomSelect>
             </label>
             <label>
               Question type
-              <select
+              <CustomSelect
                 value={form.questionType}
                 onChange={(e) => {
                   const questionType = e.target.value;
@@ -966,11 +967,11 @@ function QuestionBankView({
                 <option value="image">Image based</option>
                 <option value="numeric">Numeric multiple choice</option>
                 <option value="descriptive">Descriptive response</option>
-              </select>
+              </CustomSelect>
             </label>
             <label>
               Language
-              <select
+              <CustomSelect
                 value={form.language}
                 onChange={(e) =>
                   onSetForm({ ...form, language: e.target.value })
@@ -978,7 +979,7 @@ function QuestionBankView({
               >
                 <option>English</option>
                 <option>Hindi</option>
-              </select>
+              </CustomSelect>
             </label>
             <Field
               label="Source year (optional)"
@@ -997,7 +998,7 @@ function QuestionBankView({
             <div className="passage-group-editor">
               <label className="form-field">
                 Passage group
-                <select
+                <CustomSelect
                   value={form.passageGroupId}
                   onChange={(e) =>
                     onSetForm((v) => ({
@@ -1012,7 +1013,7 @@ function QuestionBankView({
                       {group.title} · {group.language}
                     </option>
                   ))}
-                </select>
+                </CustomSelect>
               </label>
               {passageGroups.find(
                 (group) => group.id === form.passageGroupId,
@@ -1303,7 +1304,7 @@ function QuestionBankView({
                   }}
                 >
                   <span style={{ color: "var(--text-muted)" }}>Topic:</span>
-                  <select
+                  <CustomSelect
                     value={topicFilter}
                     onChange={(e) => setTopicFilter(e.target.value)}
                     style={{
@@ -1322,7 +1323,7 @@ function QuestionBankView({
                         {t}
                       </option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </label>
               )}
               <label className="question-search">

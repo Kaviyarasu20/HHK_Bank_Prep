@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useEffect, useMemo, useState } from "react";
 import {
   BookOpen,
@@ -485,30 +486,30 @@ export function AdminReadingComprehension({ onToast, onConfirmModal }) {
           <div className="question-config">
             <label>
               Examination
-              <select value={examination} onChange={(e) => setExamination(e.target.value)}>
+              <CustomSelect value={examination} onChange={(e) => setExamination(e.target.value)}>
                 {(meta?.examinations ?? []).map((ex) => (
                   <option key={ex} value={ex}>{ex}</option>
                 ))}
-              </select>
+              </CustomSelect>
             </label>
 
             <label>
               Passage Difficulty
-              <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+              <CustomSelect value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
                 <option value="easy">Easy</option>
                 <option value="moderate">Moderate</option>
                 <option value="hard">Hard</option>
                 <option value="expert">Expert</option>
-              </select>
+              </CustomSelect>
             </label>
 
             <label>
               Passage Length
-              <select value={passageLength} onChange={(e) => setPassageLength(e.target.value)}>
+              <CustomSelect value={passageLength} onChange={(e) => setPassageLength(e.target.value)}>
                 <option value="short">Short (220–320 words)</option>
                 <option value="medium">Medium (380–520 words)</option>
                 <option value="long">Long (560–740 words)</option>
-              </select>
+              </CustomSelect>
             </label>
 
             <label>
@@ -535,32 +536,32 @@ export function AdminReadingComprehension({ onToast, onConfirmModal }) {
 
             <label>
               Number of Options
-              <select value={optionCount} onChange={(e) => setOptionCount(Number(e.target.value))}>
+              <CustomSelect value={optionCount} onChange={(e) => setOptionCount(Number(e.target.value))}>
                 <option value={5}>5 Options (A–E — Banking Standard)</option>
                 <option value={4}>4 Options (A–D)</option>
-              </select>
+              </CustomSelect>
             </label>
 
             <label>
               Include Detailed Explanations
-              <select
+              <CustomSelect
                 value={includeExplanations ? "yes" : "no"}
                 onChange={(e) => setIncludeExplanations(e.target.value === "yes")}
               >
                 <option value="yes">Yes — Detailed Explanations + Passage Ref</option>
                 <option value="no">No — Brief Justification Only</option>
-              </select>
+              </CustomSelect>
             </label>
 
             <label>
               Include Vocabulary List (English + Tamil)
-              <select
+              <CustomSelect
                 value={includeVocabulary ? "yes" : "no"}
                 onChange={(e) => setIncludeVocabulary(e.target.value === "yes")}
               >
                 <option value="yes">Yes — Auto-Extract Banking Vocabulary</option>
                 <option value="no">No</option>
-              </select>
+              </CustomSelect>
             </label>
           </div>
 
@@ -679,30 +680,30 @@ export function AdminReadingComprehension({ onToast, onConfirmModal }) {
       {tab === "manage" && (
         <section className="panel admin-panel rc-panel">
           <div className="qb-picker-filters">
-            <select value={filterExam} onChange={(e) => setFilterExam(e.target.value)}>
+            <CustomSelect value={filterExam} onChange={(e) => setFilterExam(e.target.value)}>
               <option value="all">All Examinations</option>
               {(meta?.examinations ?? []).map((ex) => (
                 <option key={ex} value={ex}>{ex}</option>
               ))}
-            </select>
-            <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
+            </CustomSelect>
+            <CustomSelect value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
               <option value="all">All 15 Categories</option>
               {(meta?.allCategories ?? []).map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
-            </select>
-            <select value={filterDifficulty} onChange={(e) => setFilterDifficulty(e.target.value)}>
+            </CustomSelect>
+            <CustomSelect value={filterDifficulty} onChange={(e) => setFilterDifficulty(e.target.value)}>
               <option value="all">All Difficulties</option>
               <option value="easy">Easy</option>
               <option value="moderate">Moderate</option>
               <option value="hard">Hard</option>
               <option value="expert">Expert</option>
-            </select>
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+            </CustomSelect>
+            <CustomSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
               <option value="all">All Statuses</option>
               <option value="draft">Draft</option>
               <option value="published">Published</option>
-            </select>
+            </CustomSelect>
             <input
               type="search"
               placeholder="Search passage title or category..."
@@ -802,7 +803,7 @@ export function AdminReadingComprehension({ onToast, onConfirmModal }) {
             Select Examination → Category → Passage → Question Number to edit any question independently without modifying sibling questions.
           </p>
           <div className="qb-picker-filters">
-            <select
+            <CustomSelect
               value={editExam}
               onChange={(e) => {
                 setEditExam(e.target.value);
@@ -816,9 +817,9 @@ export function AdminReadingComprehension({ onToast, onConfirmModal }) {
               {(meta?.examinations ?? []).map((ex) => (
                 <option key={ex} value={ex}>{ex}</option>
               ))}
-            </select>
+            </CustomSelect>
 
-            <select
+            <CustomSelect
               value={editCategory}
               onChange={(e) => {
                 setEditCategory(e.target.value);
@@ -832,18 +833,18 @@ export function AdminReadingComprehension({ onToast, onConfirmModal }) {
               {(meta?.allCategories ?? []).map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
-            </select>
+            </CustomSelect>
 
-            <select value={editPassageId} onChange={(e) => void handleSelectEditPassage(e.target.value)}>
+            <CustomSelect value={editPassageId} onChange={(e) => void handleSelectEditPassage(e.target.value)}>
               <option value="">3. Select Passage ({editorCandidatePassages.length})</option>
               {editorCandidatePassages.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.title} ({p.examination})
                 </option>
               ))}
-            </select>
+            </CustomSelect>
 
-            <select
+            <CustomSelect
               value={editQuestionId}
               disabled={!editPassageDetail?.questions?.length}
               onChange={(e) => {
@@ -859,7 +860,7 @@ export function AdminReadingComprehension({ onToast, onConfirmModal }) {
                   Q{idx + 1} — {q.question_type}
                 </option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
 
           {editPassageDetail && editQuestionForm && (
@@ -906,29 +907,29 @@ export function AdminReadingComprehension({ onToast, onConfirmModal }) {
                 <div className="question-config">
                   <label>
                     5. Question Type
-                    <select
+                    <CustomSelect
                       value={editQuestionForm.question_type}
                       onChange={(e) => setEditQuestionForm({ ...editQuestionForm, question_type: e.target.value })}
                     >
                       {(meta?.questionTypes ?? []).map((qt) => (
                         <option key={qt} value={qt}>{qt}</option>
                       ))}
-                    </select>
+                    </CustomSelect>
                   </label>
                   <label>
                     Question Category
-                    <select
+                    <CustomSelect
                       value={editQuestionForm.category || editPassageDetail.category}
                       onChange={(e) => setEditQuestionForm({ ...editQuestionForm, category: e.target.value })}
                     >
                       {(meta?.allCategories ?? []).map((c) => (
                         <option key={c} value={c}>{c}</option>
                       ))}
-                    </select>
+                    </CustomSelect>
                   </label>
                   <label>
                     Difficulty
-                    <select
+                    <CustomSelect
                       value={editQuestionForm.difficulty}
                       onChange={(e) => setEditQuestionForm({ ...editQuestionForm, difficulty: e.target.value })}
                     >
@@ -936,18 +937,18 @@ export function AdminReadingComprehension({ onToast, onConfirmModal }) {
                       <option value="moderate">Moderate</option>
                       <option value="hard">Hard</option>
                       <option value="expert">Expert</option>
-                    </select>
+                    </CustomSelect>
                   </label>
                   <label>
                     Correct Answer
-                    <select
+                    <CustomSelect
                       value={editQuestionForm.correct_answer}
                       onChange={(e) => setEditQuestionForm({ ...editQuestionForm, correct_answer: e.target.value })}
                     >
                       {(editQuestionForm.options ?? []).map((o) => (
                         <option key={o.key} value={o.key}>Option {o.key}</option>
                       ))}
-                    </select>
+                    </CustomSelect>
                   </label>
                 </div>
 
@@ -1072,29 +1073,29 @@ export function AdminReadingComprehension({ onToast, onConfirmModal }) {
             </label>
             <label>
               Examination
-              <select
+              <CustomSelect
                 value={passageDraft.examination}
                 onChange={(e) => setPassageDraft({ ...passageDraft, examination: e.target.value })}
               >
                 {(meta?.examinations ?? []).map((ex) => (
                   <option key={ex} value={ex}>{ex}</option>
                 ))}
-              </select>
+              </CustomSelect>
             </label>
             <label>
               Category
-              <select
+              <CustomSelect
                 value={passageDraft.category}
                 onChange={(e) => setPassageDraft({ ...passageDraft, category: e.target.value })}
               >
                 {(meta?.allCategories ?? []).map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
-              </select>
+              </CustomSelect>
             </label>
             <label>
               Difficulty
-              <select
+              <CustomSelect
                 value={passageDraft.difficulty}
                 onChange={(e) => setPassageDraft({ ...passageDraft, difficulty: e.target.value })}
               >
@@ -1102,7 +1103,7 @@ export function AdminReadingComprehension({ onToast, onConfirmModal }) {
                 <option value="moderate">Moderate</option>
                 <option value="hard">Hard</option>
                 <option value="expert">Expert</option>
-              </select>
+              </CustomSelect>
             </label>
           </div>
 
@@ -1137,25 +1138,25 @@ export function AdminReadingComprehension({ onToast, onConfirmModal }) {
               <div className="question-config">
                 <label>
                   Question Type
-                  <select
+                  <CustomSelect
                     value={newQuestionDraft.question_type}
                     onChange={(e) => setNewQuestionDraft({ ...newQuestionDraft, question_type: e.target.value })}
                   >
                     {(meta?.questionTypes ?? []).map((qt) => (
                       <option key={qt} value={qt}>{qt}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </label>
                 <label>
                   Correct Answer
-                  <select
+                  <CustomSelect
                     value={newQuestionDraft.correct_answer}
                     onChange={(e) => setNewQuestionDraft({ ...newQuestionDraft, correct_answer: e.target.value })}
                   >
                     {newQuestionDraft.options.map((o) => (
                       <option key={o.key} value={o.key}>Option {o.key}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </label>
               </div>
               <label className="rc-full-field">

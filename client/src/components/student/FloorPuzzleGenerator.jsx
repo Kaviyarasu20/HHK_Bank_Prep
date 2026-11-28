@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useState } from "react";
 import api from "../api/client";
 import {
@@ -132,25 +133,25 @@ export default function FloorPuzzleGenerator() {
             <div className="form-row">
               <label>
                 Exam <span className="req">*</span>
-                <select
+                <CustomSelect
                   value={form.exam}
                   onChange={(e) => (form.exam = e.target.value)}
                 >
                   {EXAMS.map((x) => <option key={x} value={x}>{x}</option>)}
-                </select>
+                </CustomSelect>
               </label>
               <label>
                 Stage
-                <select
+                <CustomSelect
                   value={form.stage}
                   onChange={(e) => (form.stage = e.target.value)}
                 >
                   {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+                </CustomSelect>
               </label>
               <label>
                 Puzzle Type
-                <select
+                <CustomSelect
                   value={form.puzzleType}
                   onChange={(e) => (form.puzzleType = e.target.value)}
                 >
@@ -159,27 +160,27 @@ export default function FloorPuzzleGenerator() {
                       {t.label}
                     </option>
                   ))}
-                </select>
+                </CustomSelect>
               </label>
               <label>
                 Difficulty
-                <select
+                <CustomSelect
                   value={form.difficulty}
                   onChange={(e) => (form.difficulty = e.target.value)}
                 >
                   {DIFFICULTIES.map((d) => (
                     <option key={d} value={d}>{d}</option>
                   ))}
-                </select>
+                </CustomSelect>
               </label>
               <label>
                 Questions
-                <select
+                <CustomSelect
                   value={form.questionCount}
                   onChange={(e) => (form.questionCount = Number(e.target.value))}
                 >
                   [5, 6, 7, 8].map((n) => <option key={n} value={n}>{n}</option>)
-                </select>
+                </CustomSelect>
               </label>
               <button
                 type="submit"

@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, Edit2, Plus, RefreshCw, ShieldAlert } from "lucide-react";
 import { adminBankingApi } from "../../api/bankingAwareness";
@@ -418,7 +419,7 @@ export function CurrentAffairsReferenceAdmin({ onToast }) {
               <span className="section-kicker">BANKING REFERENCE MANAGER</span>
               <h2>{form.id ? `Edit ${ENTITIES.find((x) => x.id === entity)?.label}` : `Add ${ENTITIES.find((x) => x.id === entity)?.label}`}</h2>
             </div>
-            <select
+            <CustomSelect
               className="affair-status"
               value={form.status}
               onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
@@ -426,7 +427,7 @@ export function CurrentAffairsReferenceAdmin({ onToast }) {
               {STATUS_OPTIONS.map((s) => (
                 <option key={s} value={s}>{s.replace("_", " ")}</option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
 
           {formError && <div className="ca-error-banner" role="alert"><span>{formError}</span></div>}

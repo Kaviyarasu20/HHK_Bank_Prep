@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, BookOpen, Building2, Landmark, RefreshCw, Scale, Search, ShieldCheck, Users } from "lucide-react";
 import { studentBankingApi } from "../../api/bankingAwareness";
@@ -168,49 +169,49 @@ export function BankingAwarenessDashboard() {
           {tab === "limits" && (
             <label className="form-field" style={{ margin: 0 }}>
               Category
-              <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+              <CustomSelect value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
                 {LIMIT_CATEGORIES.map((c) => (
                   <option key={c || "all"} value={c}>
                     {c || "All categories"}
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
             </label>
           )}
 
           {tab === "institutions" && (
             <label className="form-field" style={{ margin: 0 }}>
               Institution Type
-              <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+              <CustomSelect value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
                 {INSTITUTION_TYPES.map((t) => (
                   <option key={t || "all"} value={t}>
                     {t || "All types"}
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
             </label>
           )}
 
           {tab === "leaders" && (
             <label className="form-field" style={{ margin: 0 }}>
               Appointments View
-              <select value={leaderScope} onChange={(e) => setLeaderScope(e.target.value)}>
+              <CustomSelect value={leaderScope} onChange={(e) => setLeaderScope(e.target.value)}>
                 <option value="current">Current Approved Leaders</option>
                 <option value="historical">Historical Appointments</option>
-              </select>
+              </CustomSelect>
             </label>
           )}
 
           {tab === "static_gk" && (
             <label className="form-field" style={{ margin: 0 }}>
               Target Exam
-              <select value={examFilter} onChange={(e) => setExamFilter(e.target.value)}>
+              <CustomSelect value={examFilter} onChange={(e) => setExamFilter(e.target.value)}>
                 {EXAM_OPTIONS.map((ex) => (
                   <option key={ex || "all"} value={ex}>
                     {ex || "All banking exams"}
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
             </label>
           )}
         </div>

@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
@@ -435,21 +436,25 @@ export function PublicPortal({
                 <h1>Explore Free &amp; Paid Mock Tests</h1>
               </div>
               <div className="payment-filters-bar" style={{ marginBottom: 0 }}>
-                <select value={accessFilter} onChange={(e) => setAccessFilter(e.target.value)} aria-label="Filter by free or paid">
+                <CustomSelect
+                  value={accessFilter}
+                  onChange={(event) => setAccessFilter(event.target.value)}
+                  aria-label="Filter by free or paid"
+                >
                   <option value="ALL">All Access Types</option>
                   <option value="FREE">Free Tests Only</option>
                   <option value="PAID">Paid / Subscription Tests</option>
-                </select>
+                </CustomSelect>
                 {testTab === "EXAM_WISE" ? (
-                  <select value={examFilter} onChange={(e) => setExamFilter(e.target.value)} aria-label="Filter by exam">
+                  <CustomSelect value={examFilter} onChange={(e) => setExamFilter(e.target.value)} aria-label="Filter by exam">
                     <option value="">All Exams</option>
                     {exams.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
-                  </select>
+                  </CustomSelect>
                 ) : (
-                  <select value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)} aria-label="Filter by subject">
+                  <CustomSelect value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)} aria-label="Filter by subject">
                     <option value="">All Subjects</option>
                     {topicSubjects.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  </CustomSelect>
                 )}
               </div>
             </div>

@@ -114,6 +114,41 @@
   color: #7165d7
 }
 
+.auth-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 3px;
+}
+
+.auth-return-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border: 1px solid #e5e4f2;
+  border-radius: 7px;
+  background: #fff;
+  color: #6257cd;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+
+.auth-return-link:hover {
+  background: #f7f6ff;
+  border-color: #cbc7ef;
+}
+
+.auth-return-link:focus-visible {
+  outline: 2px solid #7165d7;
+  outline-offset: 2px;
+}
+
 .auth-card h2 {
   font: 750 26px Manrope, sans-serif;
   letter-spacing: -.6px;

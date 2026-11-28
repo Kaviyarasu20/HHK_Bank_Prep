@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 // ============================================================================
 // ROLE MANAGEMENT & USER GOVERNANCE VIEW (Admin Access Control)
 // ============================================================================
@@ -156,7 +157,7 @@ function RoleManagementView({
           {/* Search and Filter Toolbar */}
           <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
             {/* Filter by Role: All, Administrator, or Student */}
-            <select
+            <CustomSelect
               value={roleFilter}
               onChange={(e) => onRoleFilterChange(e.target.value)}
               style={{
@@ -170,10 +171,10 @@ function RoleManagementView({
               <option value="all">All Roles</option>
               <option value="admin">Administrators only</option>
               <option value="student">Students only</option>
-            </select>
+            </CustomSelect>
 
             {/* Filter by Account Status: All, Active, or Disabled */}
-            <select
+            <CustomSelect
               value={statusFilter}
               onChange={(e) => onStatusFilterChange(e.target.value)}
               style={{
@@ -187,7 +188,7 @@ function RoleManagementView({
               <option value="all">All Statuses</option>
               <option value="active">Active accounts</option>
               <option value="disabled">Disabled accounts</option>
-            </select>
+            </CustomSelect>
 
             {/* Instant Search Bar */}
             <div style={{ position: "relative" }}>
@@ -338,7 +339,7 @@ function RoleManagementView({
                           Current Session
                         </span>
                       ) : (
-                        <select
+                        <CustomSelect
                           value={u.role}
                           disabled={busy}
                           onChange={async (e) => {
@@ -376,7 +377,7 @@ function RoleManagementView({
                         >
                           <option value="student">Student</option>
                           <option value="admin">Administrator</option>
-                        </select>
+                        </CustomSelect>
                       )}
                     </td>
 

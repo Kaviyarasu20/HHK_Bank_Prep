@@ -88,8 +88,8 @@
 }
 
 .inline-add input,
-.config-selectors select,
-.question-config select,
+.config-selectors .styled-select-trigger,
+.question-config .styled-select-trigger,
 .form-field input,
 .form-field textarea,
 .option-input input,
@@ -278,7 +278,7 @@
 }
 
 .admin-workspace input:focus,
-.admin-workspace select:focus,
+.admin-workspace .styled-select-trigger:focus,
 .admin-workspace textarea:focus {
   outline: 2px solid #d8d4fa;
   border-color: #b9b2f1
@@ -322,7 +322,7 @@
   font-size: 13px
 }
 
-.exam-status-row select {
+.exam-status-row .styled-select-trigger {
   height: 33px;
   min-width: 150px;
   border: 1px solid #e8e8ef;
@@ -1041,7 +1041,7 @@
   margin: 16px 0;
 }
 
-.topicwise-filter-bar select {
+.topicwise-filter-bar .styled-select-trigger {
   height: 36px;
   padding: 0 10px;
   border: 1px solid #e7e7ef;
@@ -1331,7 +1331,7 @@
   align-items: center;
 }
 
-.qb-picker-filters select,
+.qb-picker-filters .styled-select-trigger,
 .qb-picker-filters input[type="search"] {
   height: 36px;
   padding: 0 10px;

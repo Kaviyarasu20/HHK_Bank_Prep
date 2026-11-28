@@ -25,7 +25,7 @@
   font-weight: 600;
   color: #5c5e73;
 }
-.gen-form select {
+.gen-form .styled-select-trigger {
   height: 34px;
   border: 1px solid #e8e8ef;
   border-radius: 6px;

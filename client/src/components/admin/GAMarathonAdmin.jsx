@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, Plus, RefreshCw, Sparkles, Users } from "lucide-react";
 import { gaMarathonAdminApi } from "../../api/phase9GaMarathon";
@@ -178,16 +179,16 @@ export function GAMarathonAdmin() {
               onChange={(e) => setTitle(e.target.value)}
               style={{ flex: 2, minWidth: 220 }}
             />
-            <select value={gaCategory} onChange={(e) => setGaCategory(e.target.value)}>
+            <CustomSelect value={gaCategory} onChange={(e) => setGaCategory(e.target.value)}>
               {meta.categories.map((c) => (
                 <option key={c.code} value={c.code}>{c.label}</option>
               ))}
-            </select>
-            <select value={accessType} onChange={(e) => setAccessType(e.target.value)}>
+            </CustomSelect>
+            <CustomSelect value={accessType} onChange={(e) => setAccessType(e.target.value)}>
               {meta.accessTypes.map((a) => (
                 <option key={a} value={a}>{a}</option>
               ))}
-            </select>
+            </CustomSelect>
             {accessType === "PAID" && (
               <input
                 type="number"
@@ -220,11 +221,11 @@ export function GAMarathonAdmin() {
               Attempt Limit
               <input type="number" placeholder="∞" value={attemptLimit} onChange={(e) => setAttemptLimit(e.target.value)} style={{ width: 76, marginLeft: 6 }} />
             </label>
-            <select value={answerReleasePolicy} onChange={(e) => setAnswerReleasePolicy(e.target.value)}>
+            <CustomSelect value={answerReleasePolicy} onChange={(e) => setAnswerReleasePolicy(e.target.value)}>
               {meta.answerReleasePolicies.map((p) => (
                 <option key={p} value={p}>Answers: {p}</option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
 
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -318,18 +319,18 @@ export function GAMarathonAdmin() {
               value={filterTopic}
               onChange={(e) => setFilterTopic(e.target.value)}
             />
-            <select value={filterDifficulty} onChange={(e) => setFilterDifficulty(e.target.value)}>
+            <CustomSelect value={filterDifficulty} onChange={(e) => setFilterDifficulty(e.target.value)}>
               <option value="">Any Difficulty</option>
               <option value="Easy">Easy</option>
               <option value="Moderate">Moderate</option>
               <option value="Difficult">Difficult</option>
-            </select>
-            <select value={filterExam} onChange={(e) => setFilterExam(e.target.value)}>
+            </CustomSelect>
+            <CustomSelect value={filterExam} onChange={(e) => setFilterExam(e.target.value)}>
               <option value="">Any Exam</option>
               {meta.exams.map((ex) => (
                 <option key={ex} value={ex}>{ex}</option>
               ))}
-            </select>
+            </CustomSelect>
             <button type="button" className="outline-btn" disabled={busy} onClick={handleSelectQuestions}>
               <Sparkles size={14} /> Select Approved Questions
             </button>

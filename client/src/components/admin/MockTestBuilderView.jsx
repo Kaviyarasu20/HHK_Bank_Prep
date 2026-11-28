@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
@@ -453,7 +454,7 @@ function MockTestBuilderView({
             <div className="question-config">
               <label>
                 Examination
-                <select
+                <CustomSelect
                   value={examId}
                   onChange={(e) => onExamChange(e.target.value)}
                 >
@@ -464,12 +465,12 @@ function MockTestBuilderView({
                     getValue={(e) => e.id}
                     getLabel={(e) => e.name}
                   />
-                </select>
+                </CustomSelect>
               </label>
 
               <label>
                 Stage
-                <select
+                <CustomSelect
                   value={stageId}
                   onChange={(e) => onStageChange(e.target.value)}
                 >
@@ -491,7 +492,7 @@ function MockTestBuilderView({
                           ))}
                         </optgroup>
                       ))}
-                </select>
+                </CustomSelect>
               </label>
 
               <label>
@@ -529,7 +530,7 @@ function MockTestBuilderView({
 
               <label>
                 Test name
-                <select
+                <CustomSelect
                   value={testNameSelectValue}
                   onChange={(e) => {
                     if (e.target.value === "__custom__") {
@@ -576,7 +577,7 @@ function MockTestBuilderView({
                     </optgroup>
                   )}
                   <option value="__custom__">Custom test name...</option>
-                </select>
+                </CustomSelect>
                 {isCustomTestName && (
                   <input
                     className="custom-test-name-input"
@@ -643,7 +644,7 @@ function MockTestBuilderView({
 
               <label>
                 Question selection
-                <select
+                <CustomSelect
                   value={selectionMode}
                   onChange={(e) => onSetSelectionMode(e.target.value)}
                 >
@@ -653,12 +654,12 @@ function MockTestBuilderView({
                   <option value="manual">
                     Manual question selection (Question Bank by Topic &amp; Subtopic)
                   </option>
-                </select>
+                </CustomSelect>
               </label>
 
               <label>
                 Question review
-                <select
+                <CustomSelect
                   value={reviewPolicy}
                   onChange={(e) => onSetReviewPolicy(e.target.value)}
                 >
@@ -666,7 +667,7 @@ function MockTestBuilderView({
                     Allow review after submission
                   </option>
                   <option value="never">Hide answer review</option>
-                </select>
+                </CustomSelect>
               </label>
             </div>
 
@@ -802,7 +803,7 @@ function MockTestBuilderView({
 
                   {/* Topic, Subtopic, Difficulty & Search Filters */}
                   <div className="qb-picker-filters">
-                    <select
+                    <CustomSelect
                       aria-label="Filter by Topic"
                       value={topicFilter}
                       onChange={(e) => setTopicFilter(e.target.value)}
@@ -813,9 +814,9 @@ function MockTestBuilderView({
                           {t.name} ({t.count})
                         </option>
                       ))}
-                    </select>
+                    </CustomSelect>
 
-                    <select
+                    <CustomSelect
                       aria-label="Filter by Subtopic"
                       value={subtopicFilter}
                       onChange={(e) => setSubtopicFilter(e.target.value)}
@@ -826,9 +827,9 @@ function MockTestBuilderView({
                           {st.name} ({st.count})
                         </option>
                       ))}
-                    </select>
+                    </CustomSelect>
 
-                    <select
+                    <CustomSelect
                       aria-label="Filter by Difficulty"
                       value={difficultyFilter}
                       onChange={(e) => setDifficultyFilter(e.target.value)}
@@ -837,7 +838,7 @@ function MockTestBuilderView({
                       <option value="easy">Easy</option>
                       <option value="medium">Medium</option>
                       <option value="hard">Hard</option>
-                    </select>
+                    </CustomSelect>
 
                     <input
                       type="search"

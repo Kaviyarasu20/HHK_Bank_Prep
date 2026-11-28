@@ -135,6 +135,15 @@
   color: #94a3b8;
 }
 
+.ec-search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.ec-search-input::-ms-clear {
+  display: none;
+}
+
 .ec-search-input:focus {
   outline: none;
   border-color: #4f46e5;

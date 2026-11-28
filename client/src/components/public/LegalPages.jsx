@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useState } from "react";
 import { ArrowLeft, CheckCircle2, Mail, Phone, ShieldCheck } from "lucide-react";
 
@@ -327,13 +328,13 @@ export function ContactSupportPage({ config, user, onBack, onToast }) {
           <div className="form-row-2">
             <label>
               Support Category
-              <select value={category} onChange={(e) => setCategory(e.target.value)}>
+              <CustomSelect value={category} onChange={(e) => setCategory(e.target.value)}>
                 <option value="PAYMENT">Payment Support</option>
                 <option value="REFUND">Refund Support</option>
                 <option value="TECHNICAL">Technical / Access Issue</option>
                 <option value="EXAM_CONTENT">Mock Test / Exam Content</option>
                 <option value="GENERAL">General Inquiry</option>
-              </select>
+              </CustomSelect>
             </label>
             <label>
               Transaction / Order ID (optional)

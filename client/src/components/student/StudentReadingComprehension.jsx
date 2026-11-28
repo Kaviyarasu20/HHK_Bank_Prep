@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
@@ -205,25 +206,25 @@ export function StudentReadingComprehension({ onToast }) {
         {error && <div className="admin-error" role="alert">{error}</div>}
 
         <div className="qb-picker-filters">
-          <select value={examFilter} onChange={(e) => setExamFilter(e.target.value)}>
+          <CustomSelect value={examFilter} onChange={(e) => setExamFilter(e.target.value)}>
             <option value="all">All Examinations</option>
             {(meta?.examinations ?? []).map((ex) => (
               <option key={ex} value={ex}>{ex}</option>
             ))}
-          </select>
-          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+          </CustomSelect>
+          <CustomSelect value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
             <option value="all">All 15 Categories</option>
             {(meta?.allCategories ?? []).map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
-          </select>
-          <select value={difficultyFilter} onChange={(e) => setDifficultyFilter(e.target.value)}>
+          </CustomSelect>
+          <CustomSelect value={difficultyFilter} onChange={(e) => setDifficultyFilter(e.target.value)}>
             <option value="all">All Difficulties</option>
             <option value="easy">Easy</option>
             <option value="moderate">Moderate</option>
             <option value="hard">Hard</option>
             <option value="expert">Expert</option>
-          </select>
+          </CustomSelect>
           <input
             type="search"
             placeholder="Search passage topic..."

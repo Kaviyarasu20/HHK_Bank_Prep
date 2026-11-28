@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { Check, CirclePlus, Plus, Save } from "lucide-react";
 import { Field } from "../common/Field";
 import {
@@ -94,7 +95,7 @@ function ExamSetupView({
             <div className="config-selectors">
               <label>
                 Examination
-                <select
+                <CustomSelect
     value={exam?.id ?? ""}
     onChange={(e) => {
       const nextIdx = exams.findIndex((x) => x.id === e.target.value);
@@ -110,19 +111,19 @@ function ExamSetupView({
     getValue={(e) => e.id}
     getLabel={(e) => e.name}
   />
-                </select>
+                </CustomSelect>
               </label>
 
               <label>
                 Stage
-                <select
+                <CustomSelect
     value={stageIndex}
     onChange={(e) => onSetStageIndex(Number(e.target.value))}
   >
                   {exam?.stages.map((s, i) => <option value={i} key={s.id ?? i}>
                       {s.name}
                     </option>)}
-                </select>
+                </CustomSelect>
               </label>
             </div>
 
@@ -142,7 +143,7 @@ function ExamSetupView({
                   <Field label="Exam code" value={exam.code} readOnly />
                   <label className="form-field">
                     Category
-                    <select
+                    <CustomSelect
     value={exam.category ?? "Other Banks / Institutions"}
     onChange={(e) => onUpdateExam((current) => ({
       ...current,
@@ -152,7 +153,7 @@ function ExamSetupView({
                       {EXAM_CATEGORIES.map((cat) => <option key={cat} value={cat}>
                           {cat}
                         </option>)}
-                    </select>
+                    </CustomSelect>
                   </label>
                 </div>
 
@@ -183,7 +184,7 @@ function ExamSetupView({
                 <div className="exam-status-row">
                   <label>
                     Publication status
-                    <select
+                    <CustomSelect
     value={exam.status}
     onChange={(e) => onUpdateExam((current) => ({
       ...current,
@@ -193,7 +194,7 @@ function ExamSetupView({
                       <option value="draft">Draft</option>
                       <option value="published">Published</option>
                       <option value="archived">Archived</option>
-                    </select>
+                    </CustomSelect>
                   </label>
                   <span>
                     Published exams unlock student mock tests and topic

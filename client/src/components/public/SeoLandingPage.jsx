@@ -93,7 +93,7 @@ export function SeoLandingPage({ pageKey, onNavigate, onOpenAuth }) {
       </section>
 
       {/* Key Facts KPI Strip */}
-      <section aria-label="Key exam highlights" className="payment-kpi-grid">
+      <section aria-label="Key exam highlights" className="payment-kpi-grid seo-kpi-grid">
         {data.kpis.map((kpi) => (
           <div key={kpi.label} className="payment-kpi-card">
             <span>{kpi.label}</span>

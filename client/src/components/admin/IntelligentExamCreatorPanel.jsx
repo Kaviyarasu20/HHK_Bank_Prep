@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useEffect, useState } from "react";
 import {
   AlertTriangle,
@@ -197,7 +198,7 @@ export function IntelligentExamCreatorPanel({
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
           <span>Shortage Policy:</span>
-          <select
+          <CustomSelect
             value={shortagePolicy}
             onChange={(e) => setShortagePolicy(e.target.value)}
             style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #cbd5e1", background: "#fff" }}
@@ -205,7 +206,7 @@ export function IntelligentExamCreatorPanel({
             <option value="FAIL_STRICT">Strict (Block if any section unavailable)</option>
             <option value="USE_BANK_FALLBACK">Use Published Bank Fallback for missing subjects</option>
             <option value="ALLOW_PARTIAL_DRAFT">Allow Partial Draft (Generate active subjects only)</option>
-          </select>
+          </CustomSelect>
         </label>
 
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>

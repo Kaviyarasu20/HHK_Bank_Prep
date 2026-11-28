@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useEffect, useState } from "react";
 import {
   Check,
@@ -250,12 +251,12 @@ export function StudentPaymentsView({
       {tab === "history" && (
         <div className="panel" style={{ padding: 20 }}>
           <div className="payment-filters-bar">
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label="Filter by payment status">
+            <CustomSelect value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label="Filter by payment status">
               <option value="">All Payment Statuses</option>
               {Object.entries(PAYMENT_STATUS_META).map(([key, meta]) => (
                 <option key={key} value={key}>{meta.label}</option>
               ))}
-            </select>
+            </CustomSelect>
             <button type="button" className="ghost-btn" onClick={() => loadAll(pagination.page, statusFilter)} disabled={busy}>
               <RefreshCw size={14} /> Refresh
             </button>
@@ -398,13 +399,13 @@ export function StudentPaymentsView({
             </p>
             <label>
               Refund Reason
-              <select value={refundReason} onChange={(e) => setRefundReason(e.target.value)}>
+              <CustomSelect value={refundReason} onChange={(e) => setRefundReason(e.target.value)}>
                 <option value="DUPLICATE_PAYMENT">Duplicate Payment</option>
                 <option value="FAILED_DEDUCTION">Failed Transaction Deduction</option>
                 <option value="TECHNICAL_ISSUE">Technical / Access Issue</option>
                 <option value="WRONG_PURCHASE">Accidental / Wrong Purchase</option>
                 <option value="OTHER">Other</option>
-              </select>
+              </CustomSelect>
             </label>
             <label>
               Additional Information

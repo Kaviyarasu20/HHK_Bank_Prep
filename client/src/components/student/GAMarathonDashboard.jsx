@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useCallback, useEffect, useState } from "react";
 import { Award, CheckCircle2, Clock, Lock, Play, RefreshCw, Sparkles } from "lucide-react";
 import { gaMarathonStudentApi } from "../../api/phase9GaMarathon";
@@ -151,24 +152,24 @@ export function GAMarathonDashboard({ onStartGaTest }) {
       {/* Filter Bar & Test Catalog */}
       <div className="panel" style={{ padding: 18, display: "grid", gap: 14 }}>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+          <CustomSelect value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
             <option value="">All GA Categories</option>
             {categories.map((c) => (
               <option key={c.code} value={c.code}>{c.label}</option>
             ))}
-          </select>
-          <select value={examFilter} onChange={(e) => setExamFilter(e.target.value)}>
+          </CustomSelect>
+          <CustomSelect value={examFilter} onChange={(e) => setExamFilter(e.target.value)}>
             <option value="">All Target Exams</option>
             {exams.map((ex) => (
               <option key={ex} value={ex}>{ex}</option>
             ))}
-          </select>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          </CustomSelect>
+          <CustomSelect value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="">All Statuses</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
             <option value="upcoming">Upcoming</option>
-          </select>
+          </CustomSelect>
         </div>
 
         {filteredTests.length === 0 ? (

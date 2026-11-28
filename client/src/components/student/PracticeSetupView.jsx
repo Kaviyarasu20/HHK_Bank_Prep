@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { ArrowRight } from "lucide-react";
 import { Field } from "../common/Field";
 import { ExamOptGroups } from "../../utils/examCategories";
@@ -57,7 +58,7 @@ function PracticeSetupView({
             <div className="question-config">
               <label>
                 Exam
-                <select
+                <CustomSelect
                   value={selectedExam}
                   onChange={(e) => {
                     setSelectedExam(e.target.value);
@@ -73,11 +74,11 @@ function PracticeSetupView({
                     getValue={(e) => e.id}
                     getLabel={(e) => `${e.name}${readyExamIds.has(e.id) ? " · Ready" : ""}`}
                   />
-                </select>
+                </CustomSelect>
               </label>
               <label>
                 Section
-                <select
+                <CustomSelect
                   value={sectionId}
                   disabled={!selectedExam}
                   onChange={(e) => {
@@ -96,11 +97,11 @@ function PracticeSetupView({
                       {c.stage_name} · {c.section_name}
                     </option>
                   ))}
-                </select>
+                </CustomSelect>
               </label>
               <label>
                 Topic
-                <select
+                <CustomSelect
                   value={topicName}
                   disabled={!sectionId}
                   onChange={(e) => {
@@ -114,12 +115,12 @@ function PracticeSetupView({
                       {c.topic_name}
                     </option>
                   ))}
-                </select>
+                </CustomSelect>
               </label>
               {distinctSubtopics.length > 0 && (
                 <label>
                   Subtopic
-                  <select
+                  <CustomSelect
                     value={subtopicName || ""}
                     onChange={(e) => setSubtopicName?.(e.target.value)}
                   >
@@ -129,12 +130,12 @@ function PracticeSetupView({
                         {st}
                       </option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </label>
               )}
               <label>
                 Difficulty
-                <select
+                <CustomSelect
     value={difficulty}
     onChange={(e) => setDifficulty(e.target.value)}
   >
@@ -142,7 +143,7 @@ function PracticeSetupView({
                   <option value="easy">Easy</option>
                   <option value="medium">Medium</option>
                   <option value="hard">Hard</option>
-                </select>
+                </CustomSelect>
               </label>
               <Field
     label="Question count"

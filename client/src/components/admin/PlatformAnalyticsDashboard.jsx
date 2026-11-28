@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useCallback, useEffect, useState } from "react";
 import { BarChart3, RefreshCw, ShieldCheck } from "lucide-react";
 import { phase10AnalyticsApi } from "../../api/phase10Analytics";
@@ -55,12 +56,12 @@ export function PlatformAnalyticsDashboard() {
             </p>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
+            <CustomSelect value={days} onChange={(e) => setDays(Number(e.target.value))}>
               <option value={7}>Last 7 Days</option>
               <option value={30}>Last 30 Days</option>
               <option value={90}>Last 90 Days</option>
               <option value={365}>Last 365 Days</option>
-            </select>
+            </CustomSelect>
             <button type="button" className="outline-btn" onClick={() => load(true)} disabled={loading}>
               <RefreshCw size={14} /> Refresh Live
             </button>

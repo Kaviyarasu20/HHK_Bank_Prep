@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useEffect, useState } from "react";
 import {
   BarChart3,
@@ -392,12 +393,12 @@ export function AdminPaymentsView({ onToast }) {
               onChange={(e) => setTxSearch(e.target.value)}
               style={{ minWidth: 260 }}
             />
-            <select value={txStatus} onChange={(e) => setTxStatus(e.target.value)}>
+            <CustomSelect value={txStatus} onChange={(e) => setTxStatus(e.target.value)}>
               <option value="ALL">All Statuses</option>
               {Object.entries(PAYMENT_STATUS_META).map(([k, v]) => (
                 <option key={k} value={k}>{v.label}</option>
               ))}
-            </select>
+            </CustomSelect>
             <button type="button" className="primary-btn" onClick={() => loadTab("transactions")}>
               Search
             </button>
@@ -537,7 +538,7 @@ export function AdminPaymentsView({ onToast }) {
                 <div className="form-row-2">
                   <label>
                     Access Type
-                    <select
+                    <CustomSelect
                       value={editingTest.accessType}
                       onChange={(e) => setEditingTest({ ...editingTest, accessType: e.target.value })}
                     >
@@ -545,7 +546,7 @@ export function AdminPaymentsView({ onToast }) {
                       <option value="PAID">PAID (Individual Purchase or Plan)</option>
                       <option value="SUBSCRIPTION">SUBSCRIPTION ONLY</option>
                       <option value="PROMOTIONAL">PROMOTIONAL FREE</option>
-                    </select>
+                    </CustomSelect>
                   </label>
                   <label>
                     Price (INR ₹)
@@ -572,7 +573,7 @@ export function AdminPaymentsView({ onToast }) {
                   </label>
                   <label>
                     Difficulty Label
-                    <select
+                    <CustomSelect
                       value={editingTest.difficultyLabel}
                       onChange={(e) => setEditingTest({ ...editingTest, difficultyLabel: e.target.value })}
                     >
@@ -580,7 +581,7 @@ export function AdminPaymentsView({ onToast }) {
                       <option value="Moderate">Moderate</option>
                       <option value="Hard">Hard</option>
                       <option value="Exam Level">Exam Level</option>
-                    </select>
+                    </CustomSelect>
                   </label>
                 </div>
                 <label>
@@ -647,11 +648,11 @@ export function AdminPaymentsView({ onToast }) {
               </label>
               <label>
                 Access Scope
-                <select value={planForm.accessScope} onChange={(e) => setPlanForm({ ...planForm, accessScope: e.target.value })}>
+                <CustomSelect value={planForm.accessScope} onChange={(e) => setPlanForm({ ...planForm, accessScope: e.target.value })}>
                   <option value="ALL_TESTS">All Published Mock Tests</option>
                   <option value="SELECTED_TESTS">Selected Mock Tests Only</option>
                   <option value="LIMITED_COUNT">Limited Count Access</option>
-                </select>
+                </CustomSelect>
               </label>
             </div>
             <div className="form-row-2" style={{ marginTop: 12 }}>
@@ -820,10 +821,10 @@ export function AdminPaymentsView({ onToast }) {
           <div className="payment-form-grid">
             <label>
               Gateway Mode
-              <select value={settings.gateway_mode} onChange={(e) => setSettings({ ...settings, gateway_mode: e.target.value })}>
+              <CustomSelect value={settings.gateway_mode} onChange={(e) => setSettings({ ...settings, gateway_mode: e.target.value })}>
                 <option value="test">Test Mode (Sandbox)</option>
                 <option value="live">Live Mode (Production)</option>
-              </select>
+              </CustomSelect>
             </label>
             <label>
               Tax Label

@@ -393,10 +393,10 @@
 }
 
 .contact-form input,
-.contact-form select,
+.contact-form .styled-select-trigger,
 .contact-form textarea,
 .payment-form-grid input,
-.payment-form-grid select,
+.payment-form-grid .styled-select-trigger,
 .payment-form-grid textarea {
   border: 1px solid #d9dbe8;
   border-radius: 8px;
@@ -585,6 +585,20 @@
   color: var(--ink);
 }
 
+.seo-kpi-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.seo-kpi-grid .payment-kpi-card {
+  min-width: 0;
+}
+
+.seo-kpi-grid .payment-kpi-card strong {
+  display: block;
+  font-size: clamp(16px, 1.5vw, 20px);
+  line-height: 1.35;
+}
+
 .payment-table-wrap {
   overflow-x: auto;
 }
@@ -620,12 +634,27 @@
 }
 
 .payment-filters-bar input,
-.payment-filters-bar select {
+.payment-filters-bar .styled-select-trigger {
   border: 1px solid #d9dbe8;
   border-radius: 8px;
   padding: 8px 11px;
   background: #fff;
   font-size: 13.5px;
+}
+
+.payment-filters-bar .styled-select {
+  flex-basis: 220px;
+}
+
+.payment-filters-bar .styled-select-trigger:hover:not(:disabled) {
+  border-color: #aaa3e8;
+  box-shadow: 0 2px 8px #6557dc12;
+}
+
+.payment-filters-bar .styled-select-trigger:disabled {
+  background-color: #f7f7fb;
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .payment-form-grid {
@@ -648,8 +677,102 @@
   .form-row-2 {
     grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 1100px) {
+  .seo-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .seo-kpi-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
   .public-header-inner {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand actions"
+      "nav nav";
+    row-gap: 8px;
+  }
+
+  .public-brand {
+    grid-area: brand;
+    min-width: 0;
+  }
+
+  .public-nav {
+    grid-area: nav;
+    justify-content: center;
+  }
+
+  .public-auth-actions {
+    grid-area: actions;
+  }
+}
+
+@media (max-width: 720px) {
+  .public-header-inner {
+    grid-template-areas:
+      "brand actions"
+      "nav nav";
+    padding: 10px 16px;
+  }
+
+  .public-nav {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .public-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .public-nav-link {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .public-header-inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "brand"
+      "actions"
+      "nav";
+    row-gap: 8px;
+    padding: 12px 16px;
+  }
+
+  .public-brand {
+    font-size: clamp(16px, 5vw, 19px);
+  }
+
+  .public-brand img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .public-auth-actions {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .public-auth-actions > button {
+    flex: 1 1 0;
+    white-space: nowrap;
+  }
+
+  .public-nav {
+    justify-content: flex-start;
   }
 }
 /* Secondary / Ghost Buttons (Public Portal, Checkout & Payments) */

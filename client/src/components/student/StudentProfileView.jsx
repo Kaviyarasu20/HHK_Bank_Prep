@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { ExamOptGroups } from "../../utils/examCategories";
 function StudentProfileView({
   profile,
@@ -40,7 +41,7 @@ function StudentProfileView({
           </label>
           <label className="form-field">
             Target examination
-            <select
+            <CustomSelect
     value={profileDraft.targetExamId}
     onChange={(e) => setProfileDraft({
       ...profileDraft,
@@ -54,11 +55,11 @@ function StudentProfileView({
     getValue={(exam) => exam.id}
     getLabel={(exam) => exam.name}
   />
-            </select>
+            </CustomSelect>
           </label>
           <label className="form-field">
             Preparation status
-            <select
+            <CustomSelect
     value={profileDraft.preparationStatus}
     onChange={(e) => setProfileDraft({
       ...profileDraft,
@@ -68,7 +69,7 @@ function StudentProfileView({
               <option value="starting">Starting</option>
               <option value="preparing">Preparing</option>
               <option value="revision">Revision</option>
-            </select>
+            </CustomSelect>
           </label>
         </div>
         <div className="admin-footer">

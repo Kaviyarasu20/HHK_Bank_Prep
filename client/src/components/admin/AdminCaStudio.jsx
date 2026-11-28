@@ -1,3 +1,4 @@
+import { CustomSelect } from "../common/CustomSelect.jsx";
 import { useEffect, useState } from "react";
 import {
   Activity,
@@ -694,7 +695,7 @@ export function AdminCaStudio({ onToast }) {
                 </label>
                 <label className="form-field">
                   Submission Mode
-                  <select
+                  <CustomSelect
                     value={batchForm.submissionMode}
                     onChange={(e) => setBatchForm({ ...batchForm, submissionMode: e.target.value })}
                   >
@@ -702,7 +703,7 @@ export function AdminCaStudio({ onToast }) {
                     <option value="bulk_paste">Bulk Multi-Article Paste</option>
                     <option value="document_upload">Document Upload (.txt / .md / .csv)</option>
                     <option value="structured_import">Structured JSON Import</option>
-                  </select>
+                  </CustomSelect>
                 </label>
                 <label className="form-field">
                   Upload Supported Document
@@ -839,17 +840,17 @@ export function AdminCaStudio({ onToast }) {
               <div className="ca-filter-controls">
                 <label className="form-field" style={{ margin: 0 }}>
                   Difficulty
-                  <select value={genConfig.difficulty} onChange={(e) => setGenConfig({ ...genConfig, difficulty: e.target.value })}>
+                  <CustomSelect value={genConfig.difficulty} onChange={(e) => setGenConfig({ ...genConfig, difficulty: e.target.value })}>
                     <option value="easy">Easy</option>
                     <option value="moderate">Moderate</option>
                     <option value="difficult">Difficult</option>
-                  </select>
+                  </CustomSelect>
                 </label>
                 <label className="form-field" style={{ margin: 0 }}>
                   Questions / Event
-                  <select value={genConfig.count} onChange={(e) => setGenConfig({ ...genConfig, count: Number(e.target.value) })}>
+                  <CustomSelect value={genConfig.count} onChange={(e) => setGenConfig({ ...genConfig, count: Number(e.target.value) })}>
                     {[1, 2, 3, 5, 8].map((n) => <option key={n} value={n}>{n}</option>)}
-                  </select>
+                  </CustomSelect>
                 </label>
               </div>
             </div>
@@ -881,7 +882,7 @@ export function AdminCaStudio({ onToast }) {
               </div>
               <label className="form-field" style={{ margin: 0 }}>
                 Approval Status
-                <select
+                <CustomSelect
                   value={eventFilter.approvalStatus}
                   onChange={(e) => setEventFilter({ ...eventFilter, approvalStatus: e.target.value })}
                 >
@@ -889,7 +890,7 @@ export function AdminCaStudio({ onToast }) {
                   <option value="pending">Pending Approval</option>
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
-                </select>
+                </CustomSelect>
               </label>
               <label className="form-field" style={{ margin: 0 }}>
                 Search Topic
@@ -1046,24 +1047,24 @@ export function AdminCaStudio({ onToast }) {
                   </label>
                   <label className="form-field">
                     Question Format
-                    <select value={manualQ.questionType} onChange={(e) => setManualQ({ ...manualQ, questionType: e.target.value })}>
+                    <CustomSelect value={manualQ.questionType} onChange={(e) => setManualQ({ ...manualQ, questionType: e.target.value })}>
                       {(meta?.questionFormats || []).map((f) => <option key={f.code} value={f.code}>{f.label}</option>)}
-                    </select>
+                    </CustomSelect>
                   </label>
                   <label className="form-field">
                     Difficulty
-                    <select value={manualQ.difficulty} onChange={(e) => setManualQ({ ...manualQ, difficulty: e.target.value })}>
+                    <CustomSelect value={manualQ.difficulty} onChange={(e) => setManualQ({ ...manualQ, difficulty: e.target.value })}>
                       <option value="easy">Easy</option>
                       <option value="moderate">Moderate</option>
                       <option value="difficult">Difficult</option>
-                    </select>
+                    </CustomSelect>
                   </label>
                   <label className="form-field">
                     Category
-                    <select value={manualQ.categoryId} onChange={(e) => setManualQ({ ...manualQ, categoryId: e.target.value })}>
+                    <CustomSelect value={manualQ.categoryId} onChange={(e) => setManualQ({ ...manualQ, categoryId: e.target.value })}>
                       <option value="">Select Category</option>
                       {(meta?.categories || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                    </CustomSelect>
                   </label>
                   <label className="form-field">
                     Current Affairs Date
@@ -1143,7 +1144,7 @@ export function AdminCaStudio({ onToast }) {
             <div className="ca-admin-filters">
               <label className="form-field" style={{ margin: 0 }}>
                 Review Status
-                <select
+                <CustomSelect
                   value={qFilter.reviewStatus}
                   onChange={(e) => {
                     const next = { ...qFilter, reviewStatus: e.target.value };
@@ -1155,11 +1156,11 @@ export function AdminCaStudio({ onToast }) {
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
                   <option value="all">All Statuses</option>
-                </select>
+                </CustomSelect>
               </label>
               <label className="form-field" style={{ margin: 0 }}>
                 Filter by Topic
-                <select
+                <CustomSelect
                   value={qFilter.eventId}
                   onChange={(e) => {
                     const next = { ...qFilter, eventId: e.target.value };
@@ -1175,11 +1176,11 @@ export function AdminCaStudio({ onToast }) {
                         {ev.main_event.slice(0, 72)} ({ev.generated_question_count} Qs)
                       </option>
                     ))}
-                </select>
+                </CustomSelect>
               </label>
               <label className="form-field" style={{ margin: 0 }}>
                 Difficulty
-                <select
+                <CustomSelect
                   value={qFilter.difficulty}
                   onChange={(e) => {
                     const next = { ...qFilter, difficulty: e.target.value };
@@ -1191,7 +1192,7 @@ export function AdminCaStudio({ onToast }) {
                   <option value="easy">Easy</option>
                   <option value="moderate">Moderate</option>
                   <option value="difficult">Difficult</option>
-                </select>
+                </CustomSelect>
               </label>
               <label className="form-field" style={{ margin: 0 }}>
                 Search
@@ -1380,10 +1381,10 @@ export function AdminCaStudio({ onToast }) {
               </label>
               <label className="form-field">
                 Access Tier
-                <select value={setForm.accessTier} onChange={(e) => setSetForm({ ...setForm, accessTier: e.target.value })}>
+                <CustomSelect value={setForm.accessTier} onChange={(e) => setSetForm({ ...setForm, accessTier: e.target.value })}>
                   <option value="free">Free (All Logged-In Students)</option>
                   <option value="premium">Premium (Active HHK Subscription)</option>
-                </select>
+                </CustomSelect>
               </label>
               <label className="form-field">
                 Difficulty Split (Easy% / Moderate% / Difficult%)
@@ -1821,13 +1822,13 @@ export function AdminCaStudio({ onToast }) {
             <div className="ca-editor-grid">
               <label className="form-field">
                 Enable Automated Daily Ingestion
-                <select
+                <CustomSelect
                   value={autoCfg.automationEnabled ? "true" : "false"}
                   onChange={(e) => setAutoCfg({ ...autoCfg, automationEnabled: e.target.value === "true" })}
                 >
                   <option value="false">Disabled (Manual Admin Trigger)</option>
                   <option value="true">Enabled</option>
-                </select>
+                </CustomSelect>
               </label>
               <label className="form-field">
                 Daily Run Time (IST)
@@ -1866,11 +1867,11 @@ export function AdminCaStudio({ onToast }) {
           <form onSubmit={handleAddSource} className="ca-admin-filters" style={{ marginBottom: 14 }}>
             <input type="text" required placeholder="Source Name (e.g., RBI)" value={newSource.name} onChange={(e) => setNewSource({ ...newSource, name: e.target.value })} />
             <input type="url" placeholder="RSS / API URL" value={newSource.feedUrl} onChange={(e) => setNewSource({ ...newSource, feedUrl: e.target.value })} />
-            <select value={newSource.trustLevel} onChange={(e) => setNewSource({ ...newSource, trustLevel: e.target.value })}>
+            <CustomSelect value={newSource.trustLevel} onChange={(e) => setNewSource({ ...newSource, trustLevel: e.target.value })}>
               <option value="verified">Verified Official</option>
               <option value="trusted">Trusted</option>
               <option value="requires_review">Requires Review</option>
-            </select>
+            </CustomSelect>
             <button type="submit" className="primary-btn">Add Source</button>
           </form>
           {(meta?.sources || []).map((s) => (
@@ -1936,29 +1937,29 @@ export function AdminCaStudio({ onToast }) {
                 </label>
                 <label className="form-field">
                   Question Format
-                  <select
+                  <CustomSelect
                     value={editingQ.questionType}
                     onChange={(e) => setEditingQ({ ...editingQ, questionType: e.target.value })}
                   >
                     {(meta?.questionFormats || []).map((f) => (
                       <option key={f.code} value={f.code}>{f.label}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </label>
                 <label className="form-field">
                   Difficulty
-                  <select
+                  <CustomSelect
                     value={editingQ.difficulty}
                     onChange={(e) => setEditingQ({ ...editingQ, difficulty: e.target.value })}
                   >
                     <option value="easy">Easy</option>
                     <option value="moderate">Moderate</option>
                     <option value="difficult">Difficult</option>
-                  </select>
+                  </CustomSelect>
                 </label>
                 <label className="form-field full-span">
                   Category
-                  <select
+                  <CustomSelect
                     value={editingQ.categoryId}
                     onChange={(e) => setEditingQ({ ...editingQ, categoryId: e.target.value })}
                   >
@@ -1966,7 +1967,7 @@ export function AdminCaStudio({ onToast }) {
                     {(meta?.categories || []).map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </label>
                 <div className="full-span ca-mcq-options-grid">
                   {editingQ.options.map((opt, idx) => (
